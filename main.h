@@ -2,12 +2,12 @@
 #define _MAIN_H
 
 typedef struct{
-	char Mode_Disbuff[10];
-	char Kp_Disbuff[8];
-	char Ki_Disbuff[8];
-	char Kd_Disbuff[8];
+	char Mode_Disbuff[2];
+	char Kp_Disbuff[10];
+	char Ki_Disbuff[10];
+	char Kd_Disbuff[10];
 	char V_Disbuff[10];
-	char SetV_Disbuff[8];
+	char SetV_Disbuff[10];
 } _dissbuff;
 
 typedef struct

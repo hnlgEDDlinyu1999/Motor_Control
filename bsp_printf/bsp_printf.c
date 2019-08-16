@@ -23,7 +23,7 @@ static unsigned long my_pow(int x,int y )
 /**
 * @brief 类似于C库函数printf的格式化输出函数
 * @detail 该函数针对特定的开发板而写，模拟了C库函数printf的功能，可以实现整数、浮点数、
-*          字符，字符串的输出，但是不支持精度指定，可满足调试需求
+*          字符，字符串的输出，但是为了精简，不支持精度指定，已经可满足调试需求
 * @param X_Coordinate 指定显示位置的X坐标
 * @param Y_Coordinate 指定显示位置的X坐标
 * @param *str 格式控制字符串
@@ -282,6 +282,38 @@ int my_printf(uint16_t X_Coordinate,uint16_t Y_Coordinate,const char *str,...)
 	}
 	va_end(ap);
 	return res;
+}
+
+/**
+* @brief 用于将一个字符串转化为数值，支持浮点数
+* @param *str 将要被转化的字符串
+* @return s*flag
+* @retval s是数值的绝对值，flag是符号标志，s*flag即为转换后的值
+*/
+float my_atof(const char *str)
+{
+	float s = 0.0;
+	float d = 10.0;
+	float flag=1.0;
+	
+	if(*str == '-')
+	{
+		flag = -1.0 ;
+		str ++;
+	}
+	while(*str >= '0' && *str<= '9' && *str != '.' )
+	{
+		s = s*10.0 +*str -'0';
+		str ++;
+	}
+	if(*str =='.')str ++;
+	while (*str >='0' && *str <='9')
+	{
+		s=s+(*str - '0')/d;
+		d*=10.0;
+		str++;
+	}
+	return s*flag;
 }
 
 
