@@ -1195,7 +1195,7 @@ void DrawGraph(void)
 {
 	y_1 = backup;
 	x_2 = x_1 + 3;
-	y_2 = 300 - (V*1.7);
+	y_2 = 300 - (Pid.ActualSpeed*1.7);
 	if (y_2<=96) y_2 = 96;
 	ILI9341_DrawLine(x_1,y_1,x_2,y_2);
 	backup = y_2;

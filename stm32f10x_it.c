@@ -32,6 +32,7 @@
 #include "stdio.h"
 #include "./bsp_led/bsp_led.h"
 #include "./bsp_printf/bsp_printf.h"
+#include "./bsp_key/bsp_key.h"
 
 /** @addtogroup STM32F10x_StdPeriph_Template
   * @{
@@ -182,10 +183,10 @@ void BASIC_TIM_IRQHandler(void)
 	{
 		TIM_ClearITPendingBit(BASE_TIMx,TIM_FLAG_Update);
 		/*进入中断，先计算实际速度*/
-		V = Pulse_num/0.668;
+		Pid.ActualSpeed = Pulse_num/0.668;
 		Pulse_num = 0;       //将脉冲数清零，下一轮计数自动开始
 		/*进行PID调整*/
-		Duty += Pid_Cal(SetV);
+		Duty += Pid_Cal();
 
 //		if(Duty<101)
 //		{
@@ -200,15 +201,31 @@ void DISPLAYTIM_IRQHandler(void)
 	if (TIM_GetITStatus(DISPLAYTIM,TIM_IT_Update)!=RESET)
 	{
 		TIM_ClearITPendingBit(DISPLAYTIM,TIM_FLAG_Update);
-		my_printf(0,0,"%f",V);
-		my_printf(0,16,"%f",Duty);
-//		sprintf (dissbuff.V_Disbuff,"V: %f",V);
-//		ILI9341_DispStringLine_EN(LINE(0),dissbuff.V_Disbuff);
-//		sprintf (dissbuff.Kp_Disbuff,"Duty: %f",Duty);
-//		ILI9341_DispStringLine_EN(LINE(1),dissbuff.Kp_Disbuff);
+		my_printf(56,0,"%f",Pid.ActualSpeed);
+		my_printf(168,0,"%f",Duty);
+		if (status_index)Param_DynaRefresh();
 		DrawGraph();
 		LED_G_TOGGLE;
 	}
 }
 
+void KEYPAD4x4_INTHandler(void)
+{
+	if(EXTI_GetITStatus(EXTI_Line12)!=RESET){//判断某个线上的中断是否发生 
+		key_int_flag=1;//标志位置1，表示有按键中断
+		EXTI_ClearITPendingBit(EXTI_Line12);   //清除 LINE 上的中断标志位
+	}     
+	if(EXTI_GetITStatus(EXTI_Line13)!=RESET){//判断某个线上的中断是否发生 
+		key_int_flag=2;//标志位置1，表示有按键中断
+		EXTI_ClearITPendingBit(EXTI_Line13);   //清除 LINE 上的中断标志位
+	}     
+	if(EXTI_GetITStatus(EXTI_Line14)!=RESET){//判断某个线上的中断是否发生 
+		key_int_flag=3;//标志位置1，表示有按键中断
+		EXTI_ClearITPendingBit(EXTI_Line14);   //清除 LINE 上的中断标志位
+	}     
+	if(EXTI_GetITStatus(EXTI_Line15)!=RESET){//判断某个线上的中断是否发生 
+		key_int_flag=4;//标志位置1，表示有按键中断
+		EXTI_ClearITPendingBit(EXTI_Line15);   //清除 LINE 上的中断标志位
+	}     
+}
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

@@ -19,19 +19,24 @@
 #include "./bsp_pwm/bsp_pwm.h"
 #include "./bsp_led/bsp_led.h"
 #include "./bsp_printf/bsp_printf.h"
+#include "./delay/delay.h"
+#include "./bsp_key/bsp_key.h"
 
+/*几个重要的全局变量*/
+uint8_t mode = 0;          ///<运行模式，0，1代表两种模式
+uint8_t status_index = 0;  ///<调参时与正常运行时的索引
+uint8_t i = 0;             ///<调参数时，缓冲区索引
+uint8_t s;                 //<用来记录键值
 
-float V = 0;               ///<实际线速度
-float SetV = 50;           ///<目标速度
 uint32_t Pulse_num = 0;    ///<脉冲个数
-float Duty = 0;            ///<占空比
+volatile float Duty = 0;   ///<占空比
 
 
 uint16_t x_1=30,x_2=0,y_1=0,y_2=0,backup=300;///<绘制波形所要用到的变量
 
 
-_Pid Pid;                  //新建一个pid结构体
-_dissbuff dissbuff;        //新建一个dissbuff结构体
+_Pid Pid;                   //新建一个pid结构体
+_dissbuff parambuff;        //新建一个dissbuff结构体
 /**
 * @brief Pid计算初始化函数
 * @detail 用于初始化Pid计算所需的参数
@@ -41,8 +46,8 @@ _dissbuff dissbuff;        //新建一个dissbuff结构体
 */
 void Pid_Init(void)
 {	
-	Pid.SetSpeed = 0;
-	Pid.ActualSpeed = 0;
+	Pid.SetSpeed = 50;
+//	Pid.ActualSpeed = 0;
 	Pid.Err = 0;
 	Pid.Err1 =0;
 	Pid.Err2 =0;
@@ -58,16 +63,11 @@ void Pid_Init(void)
 * @return Adjust
 * @retval 根据Adjust即可调整占空比
 */
-float Pid_Cal(float setspeed)
+float Pid_Cal()
 {
 	float Adjust = 0;
-	
-	Pid.ActualSpeed = V;
-	Pid.SetSpeed = setspeed;
 	Pid.Err = Pid.SetSpeed - Pid.ActualSpeed;
-	
 	Adjust = Pid.Kp*(Pid.Err-Pid.Err1) + Pid.Ki*Pid.Err + Pid.Kd*(Pid.Err-2*Pid.Err1+Pid.Err2);
-	
 	Pid.Err2 = Pid.Err1;
 	Pid.Err1 = Pid.Err;
 	
@@ -112,8 +112,135 @@ int main (void)
 	PWM_SetDuty(100);
 	/*Pid调速初始化*/
 	Pid_Init();
+	/*准备好按键*/
+	Key_Init();
+	/*显示变量的标题*/
+	Param_NameShow();
+	Param_Refresh();
+    while (1)
+	{
+		Key_Handle();
+	}
+}
 
-    while (1);
+
+/*显示与刷新相关的几个函数，暂时放在这里*/
+/**
+* @brief 按下确定键之后更新缓冲区的数据到参数
+* @detail 再调参的过程中，并不会将输入的值立即更新到参数，而是放在缓冲区里
+*         当按下确定键之后会更新到参数
+* @param None
+* @return None
+*/
+void Param_Update(void)    //赋予缓冲区的参数实际作用
+{
+	switch(status_index)
+	{
+		case 1:mode = ((uint8_t)(my_atof(parambuff.Mode_Disbuff)));break;
+		case 2:Pid.SetSpeed = my_atof(parambuff.SetV_Disbuff);break;
+		case 3:Pid.Kp = my_atof(parambuff.Kp_Disbuff);break;
+		case 4:Pid.Ki = my_atof(parambuff.Ki_Disbuff);break;
+		case 5:Pid.Kd = my_atof(parambuff.Kd_Disbuff);break;
+		default:break;
+	}
+}
+/**
+* @brief 各项参数显示刷新
+* @param None
+* @return None
+*/
+void Param_Refresh(void)      //将各项参数显示到屏幕,要写在handle之前
+{
+	my_printf (48,16,"%d",mode);
+	my_printf (168,16,"%f",Pid.SetSpeed);
+	my_printf (24, 32,"%f",Pid.Kp);
+	my_printf (104,32,"%f",Pid.Ki);
+	my_printf (184,32,"%f",Pid.Kd);
+}
+/**
+* @brief 显示各项参数的名字信息到屏幕
+* @param None
+* @return None
+*/
+void Param_NameShow(void)
+{
+	my_printf (8,   0,"realv:");
+	my_printf (128, 0,"duty:");
+	my_printf (8,  16,"mode:");
+	my_printf (128,16,"goal:");
+	my_printf (8,  32,"P:");
+	my_printf (88, 32,"I:");
+	my_printf (168,32,"D:");
+}
+/**
+* @brief 调参过程中各项参数动态刷新
+* @detail 在调参过程中，每按一次按键屏幕都会实时更新所输入的数字，更加人性化
+* @param None
+* @return None
+*/	
+void Param_DynaRefresh(void)     //此函数应当只在调参状态下工作 if（！status_index)
+{
+	switch (status_index)
+	{
+		case 1: my_printf(48, 16,"%f",my_atof(parambuff.Mode_Disbuff));break;
+		case 2: my_printf(168,16,"%f",my_atof(parambuff.SetV_Disbuff));break;
+		case 3: my_printf(24, 32,"%f",my_atof(parambuff.Kp_Disbuff));break;
+		case 4: my_printf(104,32,"%f",my_atof(parambuff.Ki_Disbuff));break;
+		case 5: my_printf(184,32,"%f",my_atof(parambuff.Kd_Disbuff));break;
+		default :break;	
+	}
+	
+}
+/**
+* @brief 光标指示所调的具体是哪一个参数
+* @detail 用*符号来标示所调的具体是哪一个参数
+*
+* @param None
+* @return None
+*/
+void Cusor_Show(void)      //此函数用于指示调的是哪个参数,在中断里边刷新
+{
+	switch (status_index)
+	{	
+		case 1:
+			my_printf (0,16,"%c",'*');
+			my_printf (120,16,"%c",' ');
+			my_printf (0,32,"%c",' ');
+			my_printf (80,32,"%c",' ');
+			my_printf (160,32,"%c",' ');break;
+		case 2:
+			my_printf (0,16,"%c",' ');
+			my_printf (120,16,"%c",'*');
+			my_printf (0,32,"%c",' ');
+			my_printf (80,32,"%c",' ');
+			my_printf (160,32,"%c",' ');break;
+		case 3:
+			my_printf (0,16,"%c",' ');
+			my_printf (120,16,"%c",' ');
+			my_printf (0,32,"%c",'*');
+			my_printf (80,32,"%c",' ');
+			my_printf (160,32,"%c",' ');break;
+		case 4:
+			my_printf (0,16,"%c",' ');
+			my_printf (120,16,"%c",' ');
+			my_printf (0,32,"%c",' ');
+			my_printf (80,32,"%c",'*');
+			my_printf (160,32,"%c",' ');break;
+		case 5:
+			my_printf (0,16,"%c",' ');
+			my_printf (120,16,"%c",' ');
+			my_printf (0,32,"%c",' ');
+			my_printf (80,32,"%c",' ');
+			my_printf (160,32,"%c",'*');break;
+		case 0:
+			my_printf (0,16,"%c",' ');
+			my_printf (120,16,"%c",' ');
+			my_printf (0,32,"%c",' ');
+			my_printf (80,32,"%c",' ');
+			my_printf (160,32,"%c",' ');break;
+		default :break;
+	}
+	
 }
 
 
