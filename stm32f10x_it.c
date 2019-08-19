@@ -182,16 +182,29 @@ void BASIC_TIM_IRQHandler(void)
 	if (TIM_GetITStatus(BASE_TIMx,TIM_IT_Update)!=RESET)
 	{
 		TIM_ClearITPendingBit(BASE_TIMx,TIM_FLAG_Update);
-		/*进入中断，先计算实际速度*/
-		Pid.ActualSpeed = Pulse_num/0.668;
-		Pulse_num = 0;       //将脉冲数清零，下一轮计数自动开始
+		/*进入中断，先计算实际值*/
+		if(!mode)       //速度模式
+		{
+			Pid.ActualSpeed = Pulse_num/0.668;
+			Pulse_num = 0;       //将脉冲数清零，下一轮计数自动开始
+		}
+		else            //角度模式
+		{
+			Pid.ActualSpeed = ((TIM3->CNT)*0.27);
+		}
 		/*进行PID调整*/
-		Duty += Pid_Cal();
-
-//		if(Duty<101)
-//		{
-			PWM_SetDuty(Duty);//
-//		}
+		Duty += Pid_Cal();     //Pid计算都用这一个函数
+		
+		if (Duty>100)
+		{
+			Duty = 100;
+		}
+        else if (Duty<0)
+		{
+			Duty = 0;
+		}			
+		
+		PWM_SetDuty(Duty);	
 		
 	}
 	
@@ -203,7 +216,8 @@ void DISPLAYTIM_IRQHandler(void)
 		TIM_ClearITPendingBit(DISPLAYTIM,TIM_FLAG_Update);
 		my_printf(56,0,"%f",Pid.ActualSpeed);
 		my_printf(168,0,"%f",Duty);
-		if (status_index)Param_DynaRefresh();
+		
+		if (status_index)Param_DynaRefresh();      //调参状态下多加了一个任务
 		DrawGraph();
 		LED_G_TOGGLE;
 	}

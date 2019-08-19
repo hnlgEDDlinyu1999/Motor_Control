@@ -7,15 +7,15 @@
   ******************************************************************************
   * @attention
   *
-  * 实验平台:野火 F103-指南者 STM32 开发板 
+  * 实验平台:野火 F103-指南者 STM32 开发板
   * 论坛    :http://www.firebbs.cn
   * 淘宝    :https://fire-stm32.taobao.com
   *
   ******************************************************************************
-  */ 
+  */
 
 #include "./bsp_drawgraph/bsp_drawgraph.h"
-#include "./font/fonts.h"	
+#include "./font/fonts.h"
 #include "./main.h"
 #include "./bsp_printf/bsp_printf.h"
 
@@ -32,20 +32,20 @@ uint16_t LCD_Y_LENGTH = ILI9341_MORE_PIXEL;
 uint8_t LCD_SCAN_MODE = 6;
 
 
-static sFONT *LCD_Currentfonts = &Font8x16;  //英文字体
+static sFONT* LCD_Currentfonts = &Font8x16;  //英文字体
 static uint16_t CurrentTextColor   = BLACK;//前景色
 static uint16_t CurrentBackColor   = WHITE;//背景色
 
- void                 ILI9341_Write_Cmd           ( uint16_t usCmd );
- void                 ILI9341_Write_Data          ( uint16_t usData );
- uint16_t             ILI9341_Read_Data           ( void );
-static void                   ILI9341_Delay               ( __IO uint32_t nCount );
-static void                   ILI9341_GPIO_Config         ( void );
-static void                   ILI9341_FSMC_Config         ( void );
-static void                   ILI9341_REG_Config          ( void );
-static void                   ILI9341_SetCursor           ( uint16_t usX, uint16_t usY );
-static  void          ILI9341_FillColor           ( uint32_t ulAmout_Point, uint16_t usColor );
-static uint16_t               ILI9341_Read_PixelData      ( void );
+void                 ILI9341_Write_Cmd(uint16_t usCmd);
+void                 ILI9341_Write_Data(uint16_t usData);
+uint16_t             ILI9341_Read_Data(void);
+static void                   ILI9341_Delay(__IO uint32_t nCount);
+static void                   ILI9341_GPIO_Config(void);
+static void                   ILI9341_FSMC_Config(void);
+static void                   ILI9341_REG_Config(void);
+static void                   ILI9341_SetCursor(uint16_t usX, uint16_t usY);
+static  void          ILI9341_FillColor(uint32_t ulAmout_Point, uint16_t usColor);
+static uint16_t               ILI9341_Read_PixelData(void);
 
 
 
@@ -54,11 +54,11 @@ static uint16_t               ILI9341_Read_PixelData      ( void );
   * @brief  向ILI9341写入命令
   * @param  usCmd :要写入的命令（表寄存器地址）
   * @retval 无
-  */	
-__inline void ILI9341_Write_Cmd ( uint16_t usCmd )
+  */
+__inline void ILI9341_Write_Cmd(uint16_t usCmd)
 {
-	* ( __IO uint16_t * ) ( FSMC_Addr_ILI9341_CMD ) = usCmd;
-	
+    * (__IO uint16_t*)(FSMC_Addr_ILI9341_CMD) = usCmd;
+
 }
 
 
@@ -66,11 +66,11 @@ __inline void ILI9341_Write_Cmd ( uint16_t usCmd )
   * @brief  向ILI9341写入数据
   * @param  usData :要写入的数据
   * @retval 无
-  */	
-__inline void ILI9341_Write_Data ( uint16_t usData )
+  */
+__inline void ILI9341_Write_Data(uint16_t usData)
 {
-	* ( __IO uint16_t * ) ( FSMC_Addr_ILI9341_DATA ) = usData;
-	
+    * (__IO uint16_t*)(FSMC_Addr_ILI9341_DATA) = usData;
+
 }
 
 
@@ -78,11 +78,11 @@ __inline void ILI9341_Write_Data ( uint16_t usData )
   * @brief  从ILI9341读取数据
   * @param  无
   * @retval 读取到的数据
-  */	
-__inline uint16_t ILI9341_Read_Data ( void )
+  */
+__inline uint16_t ILI9341_Read_Data(void)
 {
-	return ( * ( __IO uint16_t * ) ( FSMC_Addr_ILI9341_DATA ) );
-	
+    return (* (__IO uint16_t*)(FSMC_Addr_ILI9341_DATA));
+
 }
 
 
@@ -90,11 +90,11 @@ __inline uint16_t ILI9341_Read_Data ( void )
   * @brief  用于 ILI9341 简单延时函数
   * @param  nCount ：延时计数值
   * @retval 无
-  */	
-static void ILI9341_Delay ( __IO uint32_t nCount )
+  */
+static void ILI9341_Delay(__IO uint32_t nCount)
 {
-  for ( ; nCount != 0; nCount -- );
-	
+    for(; nCount != 0; nCount --);
+
 }
 
 
@@ -103,171 +103,171 @@ static void ILI9341_Delay ( __IO uint32_t nCount )
   * @param  无
   * @retval 无
   */
-static void ILI9341_GPIO_Config ( void )
+static void ILI9341_GPIO_Config(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
 
-	/* 使能FSMC对应相应管脚时钟*/
-	RCC_APB2PeriphClockCmd ( 	
-													/*控制信号*/
-													ILI9341_CS_CLK|ILI9341_DC_CLK|ILI9341_WR_CLK|
-													ILI9341_RD_CLK	|ILI9341_BK_CLK|ILI9341_RST_CLK|
-													/*数据信号*/
-													ILI9341_D0_CLK|ILI9341_D1_CLK|	ILI9341_D2_CLK | 
-													ILI9341_D3_CLK | ILI9341_D4_CLK|ILI9341_D5_CLK|
-													ILI9341_D6_CLK | ILI9341_D7_CLK|ILI9341_D8_CLK|
-													ILI9341_D9_CLK | ILI9341_D10_CLK|ILI9341_D11_CLK|
-													ILI9341_D12_CLK | ILI9341_D13_CLK|ILI9341_D14_CLK|
-													ILI9341_D15_CLK	, ENABLE );
-		
-	
-	/* 配置FSMC相对应的数据线,FSMC-D0~D15 */	
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_AF_PP;
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D0_PIN;
-	GPIO_Init ( ILI9341_D0_PORT, & GPIO_InitStructure );
+    /* 使能FSMC对应相应管脚时钟*/
+    RCC_APB2PeriphClockCmd(
+        /*控制信号*/
+        ILI9341_CS_CLK | ILI9341_DC_CLK | ILI9341_WR_CLK |
+        ILI9341_RD_CLK	| ILI9341_BK_CLK | ILI9341_RST_CLK |
+        /*数据信号*/
+        ILI9341_D0_CLK | ILI9341_D1_CLK |	ILI9341_D2_CLK |
+        ILI9341_D3_CLK | ILI9341_D4_CLK | ILI9341_D5_CLK |
+        ILI9341_D6_CLK | ILI9341_D7_CLK | ILI9341_D8_CLK |
+        ILI9341_D9_CLK | ILI9341_D10_CLK | ILI9341_D11_CLK |
+        ILI9341_D12_CLK | ILI9341_D13_CLK | ILI9341_D14_CLK |
+        ILI9341_D15_CLK	, ENABLE);
 
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D1_PIN;
-	GPIO_Init ( ILI9341_D1_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D2_PIN;
-	GPIO_Init ( ILI9341_D2_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D3_PIN;
-	GPIO_Init ( ILI9341_D3_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D4_PIN;
-	GPIO_Init ( ILI9341_D4_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D5_PIN;
-	GPIO_Init ( ILI9341_D5_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D6_PIN;
-	GPIO_Init ( ILI9341_D6_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D7_PIN;
-	GPIO_Init ( ILI9341_D7_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D8_PIN;
-	GPIO_Init ( ILI9341_D8_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D9_PIN;
-	GPIO_Init ( ILI9341_D9_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D10_PIN;
-	GPIO_Init ( ILI9341_D10_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D11_PIN;
-	GPIO_Init ( ILI9341_D11_PORT, & GPIO_InitStructure );
 
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D12_PIN;
-	GPIO_Init ( ILI9341_D12_PORT, & GPIO_InitStructure );	
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D13_PIN;
-	GPIO_Init ( ILI9341_D13_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D14_PIN;
-	GPIO_Init ( ILI9341_D14_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_D15_PIN;
-	GPIO_Init ( ILI9341_D15_PORT, & GPIO_InitStructure );
-	
+    /* 配置FSMC相对应的数据线,FSMC-D0~D15 */
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_AF_PP;
 
-	
-	/* 配置FSMC相对应的控制线
-	 * FSMC_NOE   :LCD-RD
-	 * FSMC_NWE   :LCD-WR
-	 * FSMC_NE1   :LCD-CS
-	 * FSMC_A16  	:LCD-DC
-	 */
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_AF_PP;
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_RD_PIN; 
-	GPIO_Init (ILI9341_RD_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_WR_PIN; 
-	GPIO_Init (ILI9341_WR_PORT, & GPIO_InitStructure );
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_CS_PIN; 
-	GPIO_Init ( ILI9341_CS_PORT, & GPIO_InitStructure );  
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_DC_PIN; 
-	GPIO_Init ( ILI9341_DC_PORT, & GPIO_InitStructure );
-	
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D0_PIN;
+    GPIO_Init(ILI9341_D0_PORT, & GPIO_InitStructure);
 
-  /* 配置LCD复位RST控制管脚*/
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_RST_PIN; 
-	GPIO_Init ( ILI9341_RST_PORT, & GPIO_InitStructure );
-	
-	
-	/* 配置LCD背光控制管脚BK*/
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;  
-	
-	GPIO_InitStructure.GPIO_Pin = ILI9341_BK_PIN; 
-	GPIO_Init ( ILI9341_BK_PORT, & GPIO_InitStructure );
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D1_PIN;
+    GPIO_Init(ILI9341_D1_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D2_PIN;
+    GPIO_Init(ILI9341_D2_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D3_PIN;
+    GPIO_Init(ILI9341_D3_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D4_PIN;
+    GPIO_Init(ILI9341_D4_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D5_PIN;
+    GPIO_Init(ILI9341_D5_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D6_PIN;
+    GPIO_Init(ILI9341_D6_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D7_PIN;
+    GPIO_Init(ILI9341_D7_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D8_PIN;
+    GPIO_Init(ILI9341_D8_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D9_PIN;
+    GPIO_Init(ILI9341_D9_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D10_PIN;
+    GPIO_Init(ILI9341_D10_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D11_PIN;
+    GPIO_Init(ILI9341_D11_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D12_PIN;
+    GPIO_Init(ILI9341_D12_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D13_PIN;
+    GPIO_Init(ILI9341_D13_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D14_PIN;
+    GPIO_Init(ILI9341_D14_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_D15_PIN;
+    GPIO_Init(ILI9341_D15_PORT, & GPIO_InitStructure);
+
+
+
+    /* 配置FSMC相对应的控制线
+     * FSMC_NOE   :LCD-RD
+     * FSMC_NWE   :LCD-WR
+     * FSMC_NE1   :LCD-CS
+     * FSMC_A16  	:LCD-DC
+     */
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_AF_PP;
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_RD_PIN;
+    GPIO_Init(ILI9341_RD_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_WR_PIN;
+    GPIO_Init(ILI9341_WR_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_CS_PIN;
+    GPIO_Init(ILI9341_CS_PORT, & GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_DC_PIN;
+    GPIO_Init(ILI9341_DC_PORT, & GPIO_InitStructure);
+
+
+    /* 配置LCD复位RST控制管脚*/
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_RST_PIN;
+    GPIO_Init(ILI9341_RST_PORT, & GPIO_InitStructure);
+
+
+    /* 配置LCD背光控制管脚BK*/
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+
+    GPIO_InitStructure.GPIO_Pin = ILI9341_BK_PIN;
+    GPIO_Init(ILI9341_BK_PORT, & GPIO_InitStructure);
 }
 
 
- /**
-  * @brief  LCD  FSMC 模式配置
-  * @param  无
-  * @retval 无
-  */
-static void ILI9341_FSMC_Config ( void )
+/**
+ * @brief  LCD  FSMC 模式配置
+ * @param  无
+ * @retval 无
+ */
+static void ILI9341_FSMC_Config(void)
 {
-	FSMC_NORSRAMInitTypeDef  FSMC_NORSRAMInitStructure;
-	FSMC_NORSRAMTimingInitTypeDef  readWriteTiming; 	
-	
-	/* 使能FSMC时钟*/
-	RCC_AHBPeriphClockCmd ( RCC_AHBPeriph_FSMC, ENABLE );
+    FSMC_NORSRAMInitTypeDef  FSMC_NORSRAMInitStructure;
+    FSMC_NORSRAMTimingInitTypeDef  readWriteTiming;
 
-	//地址建立时间（ADDSET）为1个HCLK 2/72M=28ns
-	readWriteTiming.FSMC_AddressSetupTime      = 0x01;	 //地址建立时间
-	//数据保持时间（DATAST）+ 1个HCLK = 5/72M=70ns	
-	readWriteTiming.FSMC_DataSetupTime         = 0x04;	 //数据建立时间
-	//选择控制的模式
-	//模式B,异步NOR FLASH模式，与ILI9341的8080时序匹配
-	readWriteTiming.FSMC_AccessMode            = FSMC_AccessMode_B;	
-	
-	/*以下配置与模式B无关*/
-	//地址保持时间（ADDHLD）模式A未用到
-	readWriteTiming.FSMC_AddressHoldTime       = 0x00;	 //地址保持时间
-	//设置总线转换周期，仅用于复用模式的NOR操作
-	readWriteTiming.FSMC_BusTurnAroundDuration = 0x00;
-	//设置时钟分频，仅用于同步类型的存储器
-	readWriteTiming.FSMC_CLKDivision           = 0x00;
-	//数据保持时间，仅用于同步型的NOR	
-	readWriteTiming.FSMC_DataLatency           = 0x00;	
+    /* 使能FSMC时钟*/
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_FSMC, ENABLE);
 
-	
-	FSMC_NORSRAMInitStructure.FSMC_Bank                  = FSMC_Bank1_NORSRAMx;
-	FSMC_NORSRAMInitStructure.FSMC_DataAddressMux        = FSMC_DataAddressMux_Disable;
-	FSMC_NORSRAMInitStructure.FSMC_MemoryType            = FSMC_MemoryType_NOR;
-	FSMC_NORSRAMInitStructure.FSMC_MemoryDataWidth       = FSMC_MemoryDataWidth_16b;
-	FSMC_NORSRAMInitStructure.FSMC_BurstAccessMode       = FSMC_BurstAccessMode_Disable;
-	FSMC_NORSRAMInitStructure.FSMC_WaitSignalPolarity    = FSMC_WaitSignalPolarity_Low;
-	FSMC_NORSRAMInitStructure.FSMC_WrapMode              = FSMC_WrapMode_Disable;
-	FSMC_NORSRAMInitStructure.FSMC_WaitSignalActive      = FSMC_WaitSignalActive_BeforeWaitState;
-	FSMC_NORSRAMInitStructure.FSMC_WriteOperation        = FSMC_WriteOperation_Enable;
-	FSMC_NORSRAMInitStructure.FSMC_WaitSignal            = FSMC_WaitSignal_Disable;
-	FSMC_NORSRAMInitStructure.FSMC_ExtendedMode          = FSMC_ExtendedMode_Disable;
-	FSMC_NORSRAMInitStructure.FSMC_WriteBurst            = FSMC_WriteBurst_Disable;
-	FSMC_NORSRAMInitStructure.FSMC_ReadWriteTimingStruct = &readWriteTiming;
-	FSMC_NORSRAMInitStructure.FSMC_WriteTimingStruct     = &readWriteTiming;  
-	
-	FSMC_NORSRAMInit ( & FSMC_NORSRAMInitStructure ); 
-	
-	
-	/* 使能 FSMC_Bank1_NORSRAM4 */
-	FSMC_NORSRAMCmd ( FSMC_Bank1_NORSRAMx, ENABLE );  
-		
-		
+    //地址建立时间（ADDSET）为1个HCLK 2/72M=28ns
+    readWriteTiming.FSMC_AddressSetupTime      = 0x01;	 //地址建立时间
+    //数据保持时间（DATAST）+ 1个HCLK = 5/72M=70ns
+    readWriteTiming.FSMC_DataSetupTime         = 0x04;	 //数据建立时间
+    //选择控制的模式
+    //模式B,异步NOR FLASH模式，与ILI9341的8080时序匹配
+    readWriteTiming.FSMC_AccessMode            = FSMC_AccessMode_B;
+
+    /*以下配置与模式B无关*/
+    //地址保持时间（ADDHLD）模式A未用到
+    readWriteTiming.FSMC_AddressHoldTime       = 0x00;	 //地址保持时间
+    //设置总线转换周期，仅用于复用模式的NOR操作
+    readWriteTiming.FSMC_BusTurnAroundDuration = 0x00;
+    //设置时钟分频，仅用于同步类型的存储器
+    readWriteTiming.FSMC_CLKDivision           = 0x00;
+    //数据保持时间，仅用于同步型的NOR
+    readWriteTiming.FSMC_DataLatency           = 0x00;
+
+
+    FSMC_NORSRAMInitStructure.FSMC_Bank                  = FSMC_Bank1_NORSRAMx;
+    FSMC_NORSRAMInitStructure.FSMC_DataAddressMux        = FSMC_DataAddressMux_Disable;
+    FSMC_NORSRAMInitStructure.FSMC_MemoryType            = FSMC_MemoryType_NOR;
+    FSMC_NORSRAMInitStructure.FSMC_MemoryDataWidth       = FSMC_MemoryDataWidth_16b;
+    FSMC_NORSRAMInitStructure.FSMC_BurstAccessMode       = FSMC_BurstAccessMode_Disable;
+    FSMC_NORSRAMInitStructure.FSMC_WaitSignalPolarity    = FSMC_WaitSignalPolarity_Low;
+    FSMC_NORSRAMInitStructure.FSMC_WrapMode              = FSMC_WrapMode_Disable;
+    FSMC_NORSRAMInitStructure.FSMC_WaitSignalActive      = FSMC_WaitSignalActive_BeforeWaitState;
+    FSMC_NORSRAMInitStructure.FSMC_WriteOperation        = FSMC_WriteOperation_Enable;
+    FSMC_NORSRAMInitStructure.FSMC_WaitSignal            = FSMC_WaitSignal_Disable;
+    FSMC_NORSRAMInitStructure.FSMC_ExtendedMode          = FSMC_ExtendedMode_Disable;
+    FSMC_NORSRAMInitStructure.FSMC_WriteBurst            = FSMC_WriteBurst_Disable;
+    FSMC_NORSRAMInitStructure.FSMC_ReadWriteTimingStruct = &readWriteTiming;
+    FSMC_NORSRAMInitStructure.FSMC_WriteTimingStruct     = &readWriteTiming;
+
+    FSMC_NORSRAMInit(& FSMC_NORSRAMInitStructure);
+
+
+    /* 使能 FSMC_Bank1_NORSRAM4 */
+    FSMC_NORSRAMCmd(FSMC_Bank1_NORSRAMx, ENABLE);
+
+
 }
 
 
@@ -276,161 +276,161 @@ static void ILI9341_FSMC_Config ( void )
  * @param  无
  * @retval 无
  */
-static void ILI9341_REG_Config ( void )
+static void ILI9341_REG_Config(void)
 {
-	/*  Power control B (CFh)  */
-	DEBUG_DELAY  ();
-	ILI9341_Write_Cmd ( 0xCF  );
-	ILI9341_Write_Data ( 0x00  );
-	ILI9341_Write_Data ( 0x81  );
-	ILI9341_Write_Data ( 0x30  );
-	
-	/*  Power on sequence control (EDh) */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0xED );
-	ILI9341_Write_Data ( 0x64 );
-	ILI9341_Write_Data ( 0x03 );
-	ILI9341_Write_Data ( 0x12 );
-	ILI9341_Write_Data ( 0x81 );
-	
-	/*  Driver timing control A (E8h) */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0xE8 );
-	ILI9341_Write_Data ( 0x85 );
-	ILI9341_Write_Data ( 0x10 );
-	ILI9341_Write_Data ( 0x78 );
-	
-	/*  Power control A (CBh) */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0xCB );
-	ILI9341_Write_Data ( 0x39 );
-	ILI9341_Write_Data ( 0x2C );
-	ILI9341_Write_Data ( 0x00 );
-	ILI9341_Write_Data ( 0x34 );
-	ILI9341_Write_Data ( 0x02 );
-	
-	/* Pump ratio control (F7h) */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0xF7 );
-	ILI9341_Write_Data ( 0x20 );
-	
-	/* Driver timing control B */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0xEA );
-	ILI9341_Write_Data ( 0x00 );
-	ILI9341_Write_Data ( 0x00 );
-	
-	/* Frame Rate Control (In Normal Mode/Full Colors) (B1h) */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0xB1 );
-	ILI9341_Write_Data ( 0x00 );
-	ILI9341_Write_Data ( 0x1B );
-	
-	/*  Display Function Control (B6h) */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0xB6 );
-	ILI9341_Write_Data ( 0x0A );
-	ILI9341_Write_Data ( 0xA2 );
-	
-	/* Power Control 1 (C0h) */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0xC0 );
-	ILI9341_Write_Data ( 0x35 );
-	
-	/* Power Control 2 (C1h) */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0xC1 );
-	ILI9341_Write_Data ( 0x11 );
-	
-	/* VCOM Control 1 (C5h) */
-	ILI9341_Write_Cmd ( 0xC5 );
-	ILI9341_Write_Data ( 0x45 );
-	ILI9341_Write_Data ( 0x45 );
-	
-	/*  VCOM Control 2 (C7h)  */
-	ILI9341_Write_Cmd ( 0xC7 );
-	ILI9341_Write_Data ( 0xA2 );
-	
-	/* Enable 3G (F2h) */
-	ILI9341_Write_Cmd ( 0xF2 );
-	ILI9341_Write_Data ( 0x00 );
-	
-	/* Gamma Set (26h) */
-	ILI9341_Write_Cmd ( 0x26 );
-	ILI9341_Write_Data ( 0x01 );
-	DEBUG_DELAY ();
-	
-	/* Positive Gamma Correction */
-	ILI9341_Write_Cmd ( 0xE0 ); //Set Gamma
-	ILI9341_Write_Data ( 0x0F );
-	ILI9341_Write_Data ( 0x26 );
-	ILI9341_Write_Data ( 0x24 );
-	ILI9341_Write_Data ( 0x0B );
-	ILI9341_Write_Data ( 0x0E );
-	ILI9341_Write_Data ( 0x09 );
-	ILI9341_Write_Data ( 0x54 );
-	ILI9341_Write_Data ( 0xA8 );
-	ILI9341_Write_Data ( 0x46 );
-	ILI9341_Write_Data ( 0x0C );
-	ILI9341_Write_Data ( 0x17 );
-	ILI9341_Write_Data ( 0x09 );
-	ILI9341_Write_Data ( 0x0F );
-	ILI9341_Write_Data ( 0x07 );
-	ILI9341_Write_Data ( 0x00 );
-	
-	/* Negative Gamma Correction (E1h) */
-	ILI9341_Write_Cmd ( 0XE1 ); //Set Gamma
-	ILI9341_Write_Data ( 0x00 );
-	ILI9341_Write_Data ( 0x19 );
-	ILI9341_Write_Data ( 0x1B );
-	ILI9341_Write_Data ( 0x04 );
-	ILI9341_Write_Data ( 0x10 );
-	ILI9341_Write_Data ( 0x07 );
-	ILI9341_Write_Data ( 0x2A );
-	ILI9341_Write_Data ( 0x47 );
-	ILI9341_Write_Data ( 0x39 );
-	ILI9341_Write_Data ( 0x03 );
-	ILI9341_Write_Data ( 0x06 );
-	ILI9341_Write_Data ( 0x06 );
-	ILI9341_Write_Data ( 0x30 );
-	ILI9341_Write_Data ( 0x38 );
-	ILI9341_Write_Data ( 0x0F );
-	
-	/* memory access control set */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0x36 ); 	
-	ILI9341_Write_Data ( 0xC8 );    /*竖屏  左上角到 (起点)到右下角 (终点)扫描方式*/
-	DEBUG_DELAY ();
-	
-	/* column address control set */
-	ILI9341_Write_Cmd ( CMD_SetCoordinateX ); 
-	ILI9341_Write_Data ( 0x00 );
-	ILI9341_Write_Data ( 0x00 );
-	ILI9341_Write_Data ( 0x00 );
-	ILI9341_Write_Data ( 0xEF );
-	
-	/* page address control set */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( CMD_SetCoordinateY ); 
-	ILI9341_Write_Data ( 0x00 );
-	ILI9341_Write_Data ( 0x00 );
-	ILI9341_Write_Data ( 0x01 );
-	ILI9341_Write_Data ( 0x3F );
-	
-	/*  Pixel Format Set (3Ah)  */
-	DEBUG_DELAY ();
-	ILI9341_Write_Cmd ( 0x3a ); 
-	ILI9341_Write_Data ( 0x55 );
-	
-	/* Sleep Out (11h)  */
-	ILI9341_Write_Cmd ( 0x11 );	
-	ILI9341_Delay ( 0xAFFf<<2 );
-	DEBUG_DELAY ();
-	
-	/* Display ON (29h) */
-	ILI9341_Write_Cmd ( 0x29 ); 
-	
-	
+    /*  Power control B (CFh)  */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xCF);
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0x81);
+    ILI9341_Write_Data(0x30);
+
+    /*  Power on sequence control (EDh) */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xED);
+    ILI9341_Write_Data(0x64);
+    ILI9341_Write_Data(0x03);
+    ILI9341_Write_Data(0x12);
+    ILI9341_Write_Data(0x81);
+
+    /*  Driver timing control A (E8h) */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xE8);
+    ILI9341_Write_Data(0x85);
+    ILI9341_Write_Data(0x10);
+    ILI9341_Write_Data(0x78);
+
+    /*  Power control A (CBh) */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xCB);
+    ILI9341_Write_Data(0x39);
+    ILI9341_Write_Data(0x2C);
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0x34);
+    ILI9341_Write_Data(0x02);
+
+    /* Pump ratio control (F7h) */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xF7);
+    ILI9341_Write_Data(0x20);
+
+    /* Driver timing control B */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xEA);
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0x00);
+
+    /* Frame Rate Control (In Normal Mode/Full Colors) (B1h) */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xB1);
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0x1B);
+
+    /*  Display Function Control (B6h) */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xB6);
+    ILI9341_Write_Data(0x0A);
+    ILI9341_Write_Data(0xA2);
+
+    /* Power Control 1 (C0h) */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xC0);
+    ILI9341_Write_Data(0x35);
+
+    /* Power Control 2 (C1h) */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0xC1);
+    ILI9341_Write_Data(0x11);
+
+    /* VCOM Control 1 (C5h) */
+    ILI9341_Write_Cmd(0xC5);
+    ILI9341_Write_Data(0x45);
+    ILI9341_Write_Data(0x45);
+
+    /*  VCOM Control 2 (C7h)  */
+    ILI9341_Write_Cmd(0xC7);
+    ILI9341_Write_Data(0xA2);
+
+    /* Enable 3G (F2h) */
+    ILI9341_Write_Cmd(0xF2);
+    ILI9341_Write_Data(0x00);
+
+    /* Gamma Set (26h) */
+    ILI9341_Write_Cmd(0x26);
+    ILI9341_Write_Data(0x01);
+    DEBUG_DELAY();
+
+    /* Positive Gamma Correction */
+    ILI9341_Write_Cmd(0xE0);    //Set Gamma
+    ILI9341_Write_Data(0x0F);
+    ILI9341_Write_Data(0x26);
+    ILI9341_Write_Data(0x24);
+    ILI9341_Write_Data(0x0B);
+    ILI9341_Write_Data(0x0E);
+    ILI9341_Write_Data(0x09);
+    ILI9341_Write_Data(0x54);
+    ILI9341_Write_Data(0xA8);
+    ILI9341_Write_Data(0x46);
+    ILI9341_Write_Data(0x0C);
+    ILI9341_Write_Data(0x17);
+    ILI9341_Write_Data(0x09);
+    ILI9341_Write_Data(0x0F);
+    ILI9341_Write_Data(0x07);
+    ILI9341_Write_Data(0x00);
+
+    /* Negative Gamma Correction (E1h) */
+    ILI9341_Write_Cmd(0XE1);    //Set Gamma
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0x19);
+    ILI9341_Write_Data(0x1B);
+    ILI9341_Write_Data(0x04);
+    ILI9341_Write_Data(0x10);
+    ILI9341_Write_Data(0x07);
+    ILI9341_Write_Data(0x2A);
+    ILI9341_Write_Data(0x47);
+    ILI9341_Write_Data(0x39);
+    ILI9341_Write_Data(0x03);
+    ILI9341_Write_Data(0x06);
+    ILI9341_Write_Data(0x06);
+    ILI9341_Write_Data(0x30);
+    ILI9341_Write_Data(0x38);
+    ILI9341_Write_Data(0x0F);
+
+    /* memory access control set */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0x36);
+    ILI9341_Write_Data(0xC8);       /*竖屏  左上角到 (起点)到右下角 (终点)扫描方式*/
+    DEBUG_DELAY();
+
+    /* column address control set */
+    ILI9341_Write_Cmd(CMD_SetCoordinateX);
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0xEF);
+
+    /* page address control set */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(CMD_SetCoordinateY);
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0x00);
+    ILI9341_Write_Data(0x01);
+    ILI9341_Write_Data(0x3F);
+
+    /*  Pixel Format Set (3Ah)  */
+    DEBUG_DELAY();
+    ILI9341_Write_Cmd(0x3a);
+    ILI9341_Write_Data(0x55);
+
+    /* Sleep Out (11h)  */
+    ILI9341_Write_Cmd(0x11);
+    ILI9341_Delay(0xAFFf << 2);
+    DEBUG_DELAY();
+
+    /* Display ON (29h) */
+    ILI9341_Write_Cmd(0x29);
+
+
 }
 
 
@@ -439,17 +439,17 @@ static void ILI9341_REG_Config ( void )
  * @param  无
  * @retval 无
  */
-void ILI9341_Init ( void )
+void ILI9341_Init(void)
 {
-	ILI9341_GPIO_Config ();
-	ILI9341_FSMC_Config ();
-	
-	ILI9341_BackLed_Control ( ENABLE );      //点亮LCD背光灯
-	ILI9341_Rst ();
-	ILI9341_REG_Config ();
-	
-	//设置默认扫描方向，其中 6 模式为大部分液晶例程的默认显示方向  
-	ILI9341_GramScan(LCD_SCAN_MODE);
+    ILI9341_GPIO_Config();
+    ILI9341_FSMC_Config();
+
+    ILI9341_BackLed_Control(ENABLE);         //点亮LCD背光灯
+    ILI9341_Rst();
+    ILI9341_REG_Config();
+
+    //设置默认扫描方向，其中 6 模式为大部分液晶例程的默认显示方向
+    ILI9341_GramScan(LCD_SCAN_MODE);
 }
 
 
@@ -461,13 +461,13 @@ void ILI9341_Init ( void )
   *     @arg DISABLE :禁用背光LED
  * @retval 无
  */
-void ILI9341_BackLed_Control ( FunctionalState enumState )
+void ILI9341_BackLed_Control(FunctionalState enumState)
 {
-	if ( enumState )
-		GPIO_ResetBits ( ILI9341_BK_PORT, ILI9341_BK_PIN );	
-	else
-		GPIO_SetBits ( ILI9341_BK_PORT, ILI9341_BK_PIN );
-		
+    if(enumState)
+        GPIO_ResetBits(ILI9341_BK_PORT, ILI9341_BK_PIN);
+    else
+        GPIO_SetBits(ILI9341_BK_PORT, ILI9341_BK_PIN);
+
 }
 
 
@@ -477,29 +477,29 @@ void ILI9341_BackLed_Control ( FunctionalState enumState )
  * @param  无
  * @retval 无
  */
-void ILI9341_Rst ( void )
-{			
-	GPIO_ResetBits ( ILI9341_RST_PORT, ILI9341_RST_PIN );	 //低电平复位
+void ILI9341_Rst(void)
+{
+    GPIO_ResetBits(ILI9341_RST_PORT, ILI9341_RST_PIN);	    //低电平复位
 
-	ILI9341_Delay ( 0xAFF ); 					   
+    ILI9341_Delay(0xAFF);
 
-	GPIO_SetBits ( ILI9341_RST_PORT, ILI9341_RST_PIN );		 	 
+    GPIO_SetBits(ILI9341_RST_PORT, ILI9341_RST_PIN);
 
-	ILI9341_Delay ( 0xAFF ); 	
-	
+    ILI9341_Delay(0xAFF);
+
 }
 
 
 
 
 /**
- * @brief  设置ILI9341的GRAM的扫描方向 
- * @param  ucOption ：选择GRAM的扫描方向 
+ * @brief  设置ILI9341的GRAM的扫描方向
+ * @param  ucOption ：选择GRAM的扫描方向
  *     @arg 0-7 :参数可选值为0-7这八个方向
  *
  *	！！！其中0、3、5、6 模式适合从左至右显示文字，
- *				不推荐使用其它模式显示文字	其它模式显示文字会有镜像效果			
- *		
+ *				不推荐使用其它模式显示文字	其它模式显示文字会有镜像效果
+ *
  *	其中0、2、4、6 模式的X方向像素为240，Y方向像素为320
  *	其中1、3、5、7 模式下X方向像素为320，Y方向像素为240
  *
@@ -512,20 +512,20 @@ void ILI9341_Rst ( void )
 					X表示X轴，Y表示Y轴
 
 ------------------------------------------------------------
-模式0：				.		模式1：		.	模式2：			.	模式3：					
-					A		.					A		.		A					.		A									
-					|		.					|		.		|					.		|							
-					Y		.					X		.		Y					.		X					
-					0		.					1		.		2					.		3					
-	<--- X0 o		.	<----Y1	o		.		o 2X--->  .		o 3Y--->	
-------------------------------------------------------------	
-模式4：				.	模式5：			.	模式6：			.	模式7：					
-	<--- X4 o		.	<--- Y5 o		.		o 6X--->  .		o 7Y--->	
-					4		.					5		.		6					.		7	
-					Y		.					X		.		Y					.		X						
-					|		.					|		.		|					.		|							
-					V		.					V		.		V					.		V		
----------------------------------------------------------				
+模式0：				.		模式1：		.	模式2：			.	模式3：
+					A		.					A		.		A					.		A
+					|		.					|		.		|					.		|
+					Y		.					X		.		Y					.		X
+					0		.					1		.		2					.		3
+	<--- X0 o		.	<----Y1	o		.		o 2X--->  .		o 3Y--->
+------------------------------------------------------------
+模式4：				.	模式5：			.	模式6：			.	模式7：
+	<--- X4 o		.	<--- Y5 o		.		o 6X--->  .		o 7Y--->
+					4		.					5		.		6					.		7
+					Y		.					X		.		Y					.		X
+					|		.					|		.		|					.		|
+					V		.					V		.		V					.		V
+---------------------------------------------------------
 											 LCD屏示例
 								|-----------------|
 								|			野火Logo		|
@@ -541,46 +541,43 @@ void ILI9341_Rst ( void )
 								屏幕正面（宽240，高320）
 
  *******************************************************/
-void ILI9341_GramScan ( uint8_t ucOption )
-{	
-	//参数检查，只可输入0-7
-	if(ucOption >7 )
-		return;
-	
-	//根据模式更新LCD_SCAN_MODE的值，主要用于触摸屏选择计算参数
-	LCD_SCAN_MODE = ucOption;
-	
-	//根据模式更新XY方向的像素宽度
-	if(ucOption%2 == 0)	
-	{
-		//0 2 4 6模式下X方向像素宽度为240，Y方向为320
-		LCD_X_LENGTH = ILI9341_LESS_PIXEL;
-		LCD_Y_LENGTH =	ILI9341_MORE_PIXEL;
-	}
-	else				
-	{
-		//1 3 5 7模式下X方向像素宽度为320，Y方向为240
-		LCD_X_LENGTH = ILI9341_MORE_PIXEL;
-		LCD_Y_LENGTH =	ILI9341_LESS_PIXEL; 
-	}
+void ILI9341_GramScan(uint8_t ucOption)
+{
+    //参数检查，只可输入0-7
+    if(ucOption > 7)
+        return;
 
-	//0x36命令参数的高3位可用于设置GRAM扫描方向	
-	ILI9341_Write_Cmd ( 0x36 ); 
-	ILI9341_Write_Data ( 0x08 |(ucOption<<5));//根据ucOption的值设置LCD参数，共0-7种模式
-	ILI9341_Write_Cmd ( CMD_SetCoordinateX ); 
-	ILI9341_Write_Data ( 0x00 );		/* x 起始坐标高8位 */
-	ILI9341_Write_Data ( 0x00 );		/* x 起始坐标低8位 */
-	ILI9341_Write_Data ( ((LCD_X_LENGTH-1)>>8)&0xFF ); /* x 结束坐标高8位 */	
-	ILI9341_Write_Data ( (LCD_X_LENGTH-1)&0xFF );				/* x 结束坐标低8位 */
+    //根据模式更新LCD_SCAN_MODE的值，主要用于触摸屏选择计算参数
+    LCD_SCAN_MODE = ucOption;
 
-	ILI9341_Write_Cmd ( CMD_SetCoordinateY ); 
-	ILI9341_Write_Data ( 0x00 );		/* y 起始坐标高8位 */
-	ILI9341_Write_Data ( 0x00 );		/* y 起始坐标低8位 */
-	ILI9341_Write_Data ( ((LCD_Y_LENGTH-1)>>8)&0xFF );	/* y 结束坐标高8位 */	 
-	ILI9341_Write_Data ( (LCD_Y_LENGTH-1)&0xFF );				/* y 结束坐标低8位 */
+    //根据模式更新XY方向的像素宽度
+    if(ucOption % 2 == 0) {
+        //0 2 4 6模式下X方向像素宽度为240，Y方向为320
+        LCD_X_LENGTH = ILI9341_LESS_PIXEL;
+        LCD_Y_LENGTH =	ILI9341_MORE_PIXEL;
+    } else {
+        //1 3 5 7模式下X方向像素宽度为320，Y方向为240
+        LCD_X_LENGTH = ILI9341_MORE_PIXEL;
+        LCD_Y_LENGTH =	ILI9341_LESS_PIXEL;
+    }
 
-	/* write gram start */
-	ILI9341_Write_Cmd ( CMD_SetPixel );	
+    //0x36命令参数的高3位可用于设置GRAM扫描方向
+    ILI9341_Write_Cmd(0x36);
+    ILI9341_Write_Data(0x08 | (ucOption << 5)); //根据ucOption的值设置LCD参数，共0-7种模式
+    ILI9341_Write_Cmd(CMD_SetCoordinateX);
+    ILI9341_Write_Data(0x00);		/* x 起始坐标高8位 */
+    ILI9341_Write_Data(0x00);		/* x 起始坐标低8位 */
+    ILI9341_Write_Data(((LCD_X_LENGTH - 1) >> 8) & 0xFF); /* x 结束坐标高8位 */
+    ILI9341_Write_Data((LCD_X_LENGTH - 1) & 0xFF);				/* x 结束坐标低8位 */
+
+    ILI9341_Write_Cmd(CMD_SetCoordinateY);
+    ILI9341_Write_Data(0x00);		/* y 起始坐标高8位 */
+    ILI9341_Write_Data(0x00);		/* y 起始坐标低8位 */
+    ILI9341_Write_Data(((LCD_Y_LENGTH - 1) >> 8) & 0xFF);	/* y 结束坐标高8位 */
+    ILI9341_Write_Data((LCD_Y_LENGTH - 1) & 0xFF);				/* y 结束坐标低8位 */
+
+    /* write gram start */
+    ILI9341_Write_Cmd(CMD_SetPixel);
 }
 
 
@@ -593,20 +590,20 @@ void ILI9341_GramScan ( uint8_t ucOption )
  * @param  usHeight ：窗口的高度
  * @retval 无
  */
-void ILI9341_OpenWindow ( uint16_t usX, uint16_t usY, uint16_t usWidth, uint16_t usHeight )
-{	
-	ILI9341_Write_Cmd ( CMD_SetCoordinateX ); 				 /* 设置X坐标 */
-	ILI9341_Write_Data ( usX >> 8  );	 /* 先高8位，然后低8位 */
-	ILI9341_Write_Data ( usX & 0xff  );	 /* 设置起始点和结束点*/
-	ILI9341_Write_Data ( ( usX + usWidth - 1 ) >> 8  );
-	ILI9341_Write_Data ( ( usX + usWidth - 1 ) & 0xff  );
+void ILI9341_OpenWindow(uint16_t usX, uint16_t usY, uint16_t usWidth, uint16_t usHeight)
+{
+    ILI9341_Write_Cmd(CMD_SetCoordinateX); 				    /* 设置X坐标 */
+    ILI9341_Write_Data(usX >> 8);	     /* 先高8位，然后低8位 */
+    ILI9341_Write_Data(usX & 0xff);	     /* 设置起始点和结束点*/
+    ILI9341_Write_Data((usX + usWidth - 1) >> 8);
+    ILI9341_Write_Data((usX + usWidth - 1) & 0xff);
 
-	ILI9341_Write_Cmd ( CMD_SetCoordinateY ); 			     /* 设置Y坐标*/
-	ILI9341_Write_Data ( usY >> 8  );
-	ILI9341_Write_Data ( usY & 0xff  );
-	ILI9341_Write_Data ( ( usY + usHeight - 1 ) >> 8 );
-	ILI9341_Write_Data ( ( usY + usHeight - 1) & 0xff );
-	
+    ILI9341_Write_Cmd(CMD_SetCoordinateY); 			        /* 设置Y坐标*/
+    ILI9341_Write_Data(usY >> 8);
+    ILI9341_Write_Data(usY & 0xff);
+    ILI9341_Write_Data((usY + usHeight - 1) >> 8);
+    ILI9341_Write_Data((usY + usHeight - 1) & 0xff);
+
 }
 
 
@@ -616,9 +613,9 @@ void ILI9341_OpenWindow ( uint16_t usX, uint16_t usY, uint16_t usWidth, uint16_t
  * @param  usY ：在特定扫描方向下光标的Y坐标
  * @retval 无
  */
-static void ILI9341_SetCursor ( uint16_t usX, uint16_t usY )	
+static void ILI9341_SetCursor(uint16_t usX, uint16_t usY)
 {
-	ILI9341_OpenWindow ( usX, usY, 1, 1 );
+    ILI9341_OpenWindow(usX, usY, 1, 1);
 }
 
 
@@ -628,18 +625,18 @@ static void ILI9341_SetCursor ( uint16_t usX, uint16_t usY )
  * @param  usColor ：颜色
  * @retval 无
  */
-static __inline void ILI9341_FillColor ( uint32_t ulAmout_Point, uint16_t usColor )
+static __inline void ILI9341_FillColor(uint32_t ulAmout_Point, uint16_t usColor)
 {
-	uint32_t i = 0;
-	
-	
-	/* memory write */
-	ILI9341_Write_Cmd ( CMD_SetPixel );	
-		
-	for ( i = 0; i < ulAmout_Point; i ++ )
-		ILI9341_Write_Data ( usColor );
-		
-	
+    uint32_t i = 0;
+
+
+    /* memory write */
+    ILI9341_Write_Cmd(CMD_SetPixel);
+
+    for(i = 0; i < ulAmout_Point; i ++)
+        ILI9341_Write_Data(usColor);
+
+
 }
 
 
@@ -652,12 +649,12 @@ static __inline void ILI9341_FillColor ( uint32_t ulAmout_Point, uint16_t usColo
  * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
  * @retval 无
  */
-void ILI9341_Clear ( uint16_t usX, uint16_t usY, uint16_t usWidth, uint16_t usHeight )
+void ILI9341_Clear(uint16_t usX, uint16_t usY, uint16_t usWidth, uint16_t usHeight)
 {
-	ILI9341_OpenWindow ( usX, usY, usWidth, usHeight );
+    ILI9341_OpenWindow(usX, usY, usWidth, usHeight);
 
-	ILI9341_FillColor ( usWidth * usHeight, CurrentBackColor );		
-	
+    ILI9341_FillColor(usWidth * usHeight, CurrentBackColor);
+
 }
 
 
@@ -668,15 +665,14 @@ void ILI9341_Clear ( uint16_t usX, uint16_t usY, uint16_t usWidth, uint16_t usHe
  * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
  * @retval 无
  */
-void ILI9341_SetPointPixel ( uint16_t usX, uint16_t usY )	
-{	
-	if ( ( usX < LCD_X_LENGTH ) && ( usY < LCD_Y_LENGTH ) )
-  {
-		ILI9341_SetCursor ( usX, usY );
-		
-		ILI9341_FillColor ( 1, CurrentTextColor );
-	}
-	
+void ILI9341_SetPointPixel(uint16_t usX, uint16_t usY)
+{
+    if((usX < LCD_X_LENGTH) && (usY < LCD_Y_LENGTH)) {
+        ILI9341_SetCursor(usX, usY);
+
+        ILI9341_FillColor(1, CurrentTextColor);
+    }
+
 }
 
 
@@ -685,21 +681,21 @@ void ILI9341_SetPointPixel ( uint16_t usX, uint16_t usY )
  * @param  无
  * @retval 像素数据
  */
-static uint16_t ILI9341_Read_PixelData ( void )	
-{	
-	uint16_t usR=0, usG=0, usB=0 ;
+static uint16_t ILI9341_Read_PixelData(void)
+{
+    uint16_t usR = 0, usG = 0, usB = 0 ;
 
-	
-	ILI9341_Write_Cmd ( 0x2E );   /* 读数据 */
-	
-	usR = ILI9341_Read_Data (); 	/*FIRST READ OUT DUMMY DATA*/
-	
-	usR = ILI9341_Read_Data ();  	/*READ OUT RED DATA  */
-	usB = ILI9341_Read_Data ();  	/*READ OUT BLUE DATA*/
-	usG = ILI9341_Read_Data ();  	/*READ OUT GREEN DATA*/	
-	
-  return ( ( ( usR >> 11 ) << 11 ) | ( ( usG >> 10 ) << 5 ) | ( usB >> 11 ) );
-	
+
+    ILI9341_Write_Cmd(0x2E);      /* 读数据 */
+
+    usR = ILI9341_Read_Data(); 	/*FIRST READ OUT DUMMY DATA*/
+
+    usR = ILI9341_Read_Data();  	/*READ OUT RED DATA  */
+    usB = ILI9341_Read_Data();  	/*READ OUT BLUE DATA*/
+    usG = ILI9341_Read_Data();  	/*READ OUT GREEN DATA*/
+
+    return (((usR >> 11) << 11) | ((usG >> 10) << 5) | (usB >> 11));
+
 }
 
 
@@ -709,22 +705,22 @@ static uint16_t ILI9341_Read_PixelData ( void )
  * @param  usY ：在特定扫描方向下该点的Y坐标
  * @retval 像素数据
  */
-uint16_t ILI9341_GetPointPixel ( uint16_t usX, uint16_t usY )
-{ 
-	uint16_t usPixelData;
+uint16_t ILI9341_GetPointPixel(uint16_t usX, uint16_t usY)
+{
+    uint16_t usPixelData;
 
-	
-	ILI9341_SetCursor ( usX, usY );
-	
-	usPixelData = ILI9341_Read_PixelData ();
-	
-	return usPixelData;
-	
+
+    ILI9341_SetCursor(usX, usY);
+
+    usPixelData = ILI9341_Read_PixelData();
+
+    return usPixelData;
+
 }
 
 
 /**
- * @brief  在 ILI9341 显示器上使用 Bresenham 算法画线段 
+ * @brief  在 ILI9341 显示器上使用 Bresenham 算法画线段
  * @param  usX1 ：在特定扫描方向下线段的一个端点X坐标
  * @param  usY1 ：在特定扫描方向下线段的一个端点Y坐标
  * @param  usX2 ：在特定扫描方向下线段的另一个端点X坐标
@@ -732,78 +728,73 @@ uint16_t ILI9341_GetPointPixel ( uint16_t usX, uint16_t usY )
  * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
  * @retval 无
  */
-void ILI9341_DrawLine ( uint16_t usX1, uint16_t usY1, uint16_t usX2, uint16_t usY2 )
+void ILI9341_DrawLine(uint16_t usX1, uint16_t usY1, uint16_t usX2, uint16_t usY2)
 {
-	uint16_t us; 
-	uint16_t usX_Current, usY_Current;
-	
-	int32_t lError_X = 0, lError_Y = 0, lDelta_X, lDelta_Y, lDistance; 
-	int32_t lIncrease_X, lIncrease_Y; 	
-	
-	
-	lDelta_X = usX2 - usX1; //计算坐标增量 
-	lDelta_Y = usY2 - usY1; 
-	
-	usX_Current = usX1; 
-	usY_Current = usY1; 
-	
-	
-	if ( lDelta_X > 0 ) 
-		lIncrease_X = 1; //设置单步方向 
-	
-	else if ( lDelta_X == 0 ) 
-		lIncrease_X = 0;//垂直线 
-	
-	else 
-  { 
-    lIncrease_X = -1;
-    lDelta_X = - lDelta_X;
-  } 
+    uint16_t us;
+    uint16_t usX_Current, usY_Current;
 
-	
-	if ( lDelta_Y > 0 )
-		lIncrease_Y = 1; 
-	
-	else if ( lDelta_Y == 0 )
-		lIncrease_Y = 0;//水平线 
-	
-	else 
-  {
-    lIncrease_Y = -1;
-    lDelta_Y = - lDelta_Y;
-  } 
+    int32_t lError_X = 0, lError_Y = 0, lDelta_X, lDelta_Y, lDistance;
+    int32_t lIncrease_X, lIncrease_Y;
 
-	
-	if (  lDelta_X > lDelta_Y )
-		lDistance = lDelta_X; //选取基本增量坐标轴 
-	
-	else 
-		lDistance = lDelta_Y; 
 
-	
-	for ( us = 0; us <= lDistance + 1; us ++ )//画线输出 
-	{  
-		ILI9341_SetPointPixel ( usX_Current, usY_Current );//画点 
-		
-		lError_X += lDelta_X ; 
-		lError_Y += lDelta_Y ; 
-		
-		if ( lError_X > lDistance ) 
-		{ 
-			lError_X -= lDistance; 
-			usX_Current += lIncrease_X; 
-		}  
-		
-		if ( lError_Y > lDistance ) 
-		{ 
-			lError_Y -= lDistance; 
-			usY_Current += lIncrease_Y; 
-		} 
-		
-	}  
-	
-	
-}   
+    lDelta_X = usX2 - usX1; //计算坐标增量
+    lDelta_Y = usY2 - usY1;
+
+    usX_Current = usX1;
+    usY_Current = usY1;
+
+
+    if(lDelta_X > 0)
+        lIncrease_X = 1; //设置单步方向
+
+    else if(lDelta_X == 0)
+        lIncrease_X = 0;//垂直线
+
+    else {
+        lIncrease_X = -1;
+        lDelta_X = - lDelta_X;
+    }
+
+
+    if(lDelta_Y > 0)
+        lIncrease_Y = 1;
+
+    else if(lDelta_Y == 0)
+        lIncrease_Y = 0;//水平线
+
+    else {
+        lIncrease_Y = -1;
+        lDelta_Y = - lDelta_Y;
+    }
+
+
+    if(lDelta_X > lDelta_Y)
+        lDistance = lDelta_X; //选取基本增量坐标轴
+
+    else
+        lDistance = lDelta_Y;
+
+
+    for(us = 0; us <= lDistance + 1; us ++) { //画线输出
+        ILI9341_SetPointPixel(usX_Current, usY_Current);   //画点
+
+        lError_X += lDelta_X ;
+        lError_Y += lDelta_Y ;
+
+        if(lError_X > lDistance) {
+            lError_X -= lDistance;
+            usX_Current += lIncrease_X;
+        }
+
+        if(lError_Y > lDistance) {
+            lError_Y -= lDistance;
+            usY_Current += lIncrease_Y;
+        }
+
+    }
+
+
+}
 
 
 /**
@@ -815,24 +806,21 @@ void ILI9341_DrawLine ( uint16_t usX1, uint16_t usY1, uint16_t usX2, uint16_t us
  * @param  ucFilled ：选择是否填充该矩形
   *   该参数为以下值之一：
   *     @arg 0 :空心矩形
-  *     @arg 1 :实心矩形 
+  *     @arg 1 :实心矩形
  * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
  * @retval 无
  */
-void ILI9341_DrawRectangle ( uint16_t usX_Start, uint16_t usY_Start, uint16_t usWidth, uint16_t usHeight, uint8_t ucFilled )
+void ILI9341_DrawRectangle(uint16_t usX_Start, uint16_t usY_Start, uint16_t usWidth, uint16_t usHeight, uint8_t ucFilled)
 {
-	if ( ucFilled )
-	{
-		ILI9341_OpenWindow ( usX_Start, usY_Start, usWidth, usHeight );
-		ILI9341_FillColor ( usWidth * usHeight ,CurrentTextColor);	
-	}
-	else
-	{
-		ILI9341_DrawLine ( usX_Start, usY_Start, usX_Start + usWidth - 1, usY_Start );
-		ILI9341_DrawLine ( usX_Start, usY_Start + usHeight - 1, usX_Start + usWidth - 1, usY_Start + usHeight - 1 );
-		ILI9341_DrawLine ( usX_Start, usY_Start, usX_Start, usY_Start + usHeight - 1 );
-		ILI9341_DrawLine ( usX_Start + usWidth - 1, usY_Start, usX_Start + usWidth - 1, usY_Start + usHeight - 1 );		
-	}
+    if(ucFilled) {
+        ILI9341_OpenWindow(usX_Start, usY_Start, usWidth, usHeight);
+        ILI9341_FillColor(usWidth * usHeight, CurrentTextColor);
+    } else {
+        ILI9341_DrawLine(usX_Start, usY_Start, usX_Start + usWidth - 1, usY_Start);
+        ILI9341_DrawLine(usX_Start, usY_Start + usHeight - 1, usX_Start + usWidth - 1, usY_Start + usHeight - 1);
+        ILI9341_DrawLine(usX_Start, usY_Start, usX_Start, usY_Start + usHeight - 1);
+        ILI9341_DrawLine(usX_Start + usWidth - 1, usY_Start, usX_Start + usWidth - 1, usY_Start + usHeight - 1);
+    }
 
 }
 
@@ -849,64 +837,61 @@ void ILI9341_DrawRectangle ( uint16_t usX_Start, uint16_t usY_Start, uint16_t us
  * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
  * @retval 无
  */
-void ILI9341_DrawCircle ( uint16_t usX_Center, uint16_t usY_Center, uint16_t usRadius, uint8_t ucFilled )
+void ILI9341_DrawCircle(uint16_t usX_Center, uint16_t usY_Center, uint16_t usRadius, uint8_t ucFilled)
 {
-	int16_t sCurrentX, sCurrentY;
-	int16_t sError;
-	
-	
-	sCurrentX = 0; sCurrentY = usRadius;	  
-	
-	sError = 3 - ( usRadius << 1 );     //判断下个点位置的标志
-	
-	
-	while ( sCurrentX <= sCurrentY )
-	{
-		int16_t sCountY;
-		
-		
-		if ( ucFilled ) 			
-			for ( sCountY = sCurrentX; sCountY <= sCurrentY; sCountY ++ ) 
-			{                      
-				ILI9341_SetPointPixel ( usX_Center + sCurrentX, usY_Center + sCountY );           //1，研究对象 
-				ILI9341_SetPointPixel ( usX_Center - sCurrentX, usY_Center + sCountY );           //2       
-				ILI9341_SetPointPixel ( usX_Center - sCountY,   usY_Center + sCurrentX );           //3
-				ILI9341_SetPointPixel ( usX_Center - sCountY,   usY_Center - sCurrentX );           //4
-				ILI9341_SetPointPixel ( usX_Center - sCurrentX, usY_Center - sCountY );           //5    
-        ILI9341_SetPointPixel ( usX_Center + sCurrentX, usY_Center - sCountY );           //6
-				ILI9341_SetPointPixel ( usX_Center + sCountY,   usY_Center - sCurrentX );           //7 	
-        ILI9341_SetPointPixel ( usX_Center + sCountY,   usY_Center + sCurrentX );           //0				
-			}
-		
-		else
-		{          
-			ILI9341_SetPointPixel ( usX_Center + sCurrentX, usY_Center + sCurrentY );             //1，研究对象
-			ILI9341_SetPointPixel ( usX_Center - sCurrentX, usY_Center + sCurrentY );             //2      
-			ILI9341_SetPointPixel ( usX_Center - sCurrentY, usY_Center + sCurrentX );             //3
-			ILI9341_SetPointPixel ( usX_Center - sCurrentY, usY_Center - sCurrentX );             //4
-			ILI9341_SetPointPixel ( usX_Center - sCurrentX, usY_Center - sCurrentY );             //5       
-			ILI9341_SetPointPixel ( usX_Center + sCurrentX, usY_Center - sCurrentY );             //6
-			ILI9341_SetPointPixel ( usX_Center + sCurrentY, usY_Center - sCurrentX );             //7 
-			ILI9341_SetPointPixel ( usX_Center + sCurrentY, usY_Center + sCurrentX );             //0
-    }			
-		
-		
-		sCurrentX ++;
+    int16_t sCurrentX, sCurrentY;
+    int16_t sError;
 
-		
-		if ( sError < 0 ) 
-			sError += 4 * sCurrentX + 6;	  
-		
-		else
-		{
-			sError += 10 + 4 * ( sCurrentX - sCurrentY );   
-			sCurrentY --;
-		} 	
-		
-		
-	}
-	
-	
+
+    sCurrentX = 0;
+    sCurrentY = usRadius;
+
+    sError = 3 - (usRadius << 1);       //判断下个点位置的标志
+
+
+    while(sCurrentX <= sCurrentY) {
+        int16_t sCountY;
+
+
+        if(ucFilled)
+            for(sCountY = sCurrentX; sCountY <= sCurrentY; sCountY ++) {
+                ILI9341_SetPointPixel(usX_Center + sCurrentX, usY_Center + sCountY);              //1，研究对象
+                ILI9341_SetPointPixel(usX_Center - sCurrentX, usY_Center + sCountY);              //2
+                ILI9341_SetPointPixel(usX_Center - sCountY,   usY_Center + sCurrentX);              //3
+                ILI9341_SetPointPixel(usX_Center - sCountY,   usY_Center - sCurrentX);              //4
+                ILI9341_SetPointPixel(usX_Center - sCurrentX, usY_Center - sCountY);              //5
+                ILI9341_SetPointPixel(usX_Center + sCurrentX, usY_Center - sCountY);              //6
+                ILI9341_SetPointPixel(usX_Center + sCountY,   usY_Center - sCurrentX);              //7
+                ILI9341_SetPointPixel(usX_Center + sCountY,   usY_Center + sCurrentX);              //0
+            }
+
+        else {
+            ILI9341_SetPointPixel(usX_Center + sCurrentX, usY_Center + sCurrentY);                //1，研究对象
+            ILI9341_SetPointPixel(usX_Center - sCurrentX, usY_Center + sCurrentY);                //2
+            ILI9341_SetPointPixel(usX_Center - sCurrentY, usY_Center + sCurrentX);                //3
+            ILI9341_SetPointPixel(usX_Center - sCurrentY, usY_Center - sCurrentX);                //4
+            ILI9341_SetPointPixel(usX_Center - sCurrentX, usY_Center - sCurrentY);                //5
+            ILI9341_SetPointPixel(usX_Center + sCurrentX, usY_Center - sCurrentY);                //6
+            ILI9341_SetPointPixel(usX_Center + sCurrentY, usY_Center - sCurrentX);                //7
+            ILI9341_SetPointPixel(usX_Center + sCurrentY, usY_Center + sCurrentX);                //0
+        }
+
+
+        sCurrentX ++;
+
+
+        if(sError < 0)
+            sError += 4 * sCurrentX + 6;
+
+        else {
+            sError += 10 + 4 * (sCurrentX - sCurrentY);
+            sCurrentY --;
+        }
+
+
+    }
+
+
 }
 
 /**
@@ -917,40 +902,38 @@ void ILI9341_DrawCircle ( uint16_t usX_Center, uint16_t usY_Center, uint16_t usR
  * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
  * @retval 无
  */
-void ILI9341_DispChar_EN ( uint16_t usX, uint16_t usY, const char cChar )
+void ILI9341_DispChar_EN(uint16_t usX, uint16_t usY, const char cChar)
 {
-	uint8_t  byteCount, bitCount,fontLength;	
-	uint16_t ucRelativePositon;
-	uint8_t *Pfont;
-	
-	//对ascii码表偏移（字模表不包含ASCII表的前32个非图形符号）
-	ucRelativePositon = cChar - ' ';
-	
-	//每个字模的字节数
-	fontLength = (LCD_Currentfonts->Width*LCD_Currentfonts->Height)/8;
-		
-	//字模首地址
-	/*ascii码表偏移值乘以每个字模的字节数，求出字模的偏移位置*/
-	Pfont = (uint8_t *)&LCD_Currentfonts->table[ucRelativePositon * fontLength];
-	
-	//设置显示窗口
-	ILI9341_OpenWindow ( usX, usY, LCD_Currentfonts->Width, LCD_Currentfonts->Height);
-	
-	ILI9341_Write_Cmd ( CMD_SetPixel );			
+    uint8_t  byteCount, bitCount, fontLength;
+    uint16_t ucRelativePositon;
+    uint8_t* Pfont;
 
-	//按字节读取字模数据
-	//由于前面直接设置了显示窗口，显示数据会自动换行
-	for ( byteCount = 0; byteCount < fontLength; byteCount++ )
-	{
-			//一位一位处理要显示的颜色
-			for ( bitCount = 0; bitCount < 8; bitCount++ )
-			{
-					if ( Pfont[byteCount] & (0x80>>bitCount) )
-						ILI9341_Write_Data ( CurrentTextColor );			
-					else
-						ILI9341_Write_Data ( CurrentBackColor );
-			}	
-	}	
+    //对ascii码表偏移（字模表不包含ASCII表的前32个非图形符号）
+    ucRelativePositon = cChar - ' ';
+
+    //每个字模的字节数
+    fontLength = (LCD_Currentfonts->Width * LCD_Currentfonts->Height) / 8;
+
+    //字模首地址
+    /*ascii码表偏移值乘以每个字模的字节数，求出字模的偏移位置*/
+    Pfont = (uint8_t*)&LCD_Currentfonts->table[ucRelativePositon * fontLength];
+
+    //设置显示窗口
+    ILI9341_OpenWindow(usX, usY, LCD_Currentfonts->Width, LCD_Currentfonts->Height);
+
+    ILI9341_Write_Cmd(CMD_SetPixel);
+
+    //按字节读取字模数据
+    //由于前面直接设置了显示窗口，显示数据会自动换行
+    for(byteCount = 0; byteCount < fontLength; byteCount++) {
+        //一位一位处理要显示的颜色
+        for(bitCount = 0; bitCount < 8; bitCount++) {
+            if(Pfont[byteCount] & (0x80 >> bitCount))
+                ILI9341_Write_Data(CurrentTextColor);
+            else
+                ILI9341_Write_Data(CurrentBackColor);
+        }
+    }
 }
 
 
@@ -964,32 +947,29 @@ void ILI9341_DispChar_EN ( uint16_t usX, uint16_t usY, const char cChar )
  * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
  * @retval 无
  */
-void ILI9341_DispStringLine_EN (  uint16_t line,  char * pStr )
+void ILI9341_DispStringLine_EN(uint16_t line,  char* pStr)
 {
-	uint16_t usX = 0;
-	
-	while ( * pStr != '\0' )
-	{
-		if ( ( usX - ILI9341_DispWindow_X_Star + LCD_Currentfonts->Width ) > LCD_X_LENGTH )
-		{
-			usX = ILI9341_DispWindow_X_Star;
-			line += LCD_Currentfonts->Height;
-		}
-		
-		if ( ( line - ILI9341_DispWindow_Y_Star + LCD_Currentfonts->Height ) > LCD_Y_LENGTH )
-		{
-			usX = ILI9341_DispWindow_X_Star;
-			line = ILI9341_DispWindow_Y_Star;
-		}
-		
-		ILI9341_DispChar_EN ( usX, line, * pStr);
-		
-		pStr ++;
-		
-		usX += LCD_Currentfonts->Width;
-		
-	}
-	
+    uint16_t usX = 0;
+
+    while(* pStr != '\0') {
+        if((usX - ILI9341_DispWindow_X_Star + LCD_Currentfonts->Width) > LCD_X_LENGTH) {
+            usX = ILI9341_DispWindow_X_Star;
+            line += LCD_Currentfonts->Height;
+        }
+
+        if((line - ILI9341_DispWindow_Y_Star + LCD_Currentfonts->Height) > LCD_Y_LENGTH) {
+            usX = ILI9341_DispWindow_X_Star;
+            line = ILI9341_DispWindow_Y_Star;
+        }
+
+        ILI9341_DispChar_EN(usX, line, * pStr);
+
+        pStr ++;
+
+        usX += LCD_Currentfonts->Width;
+
+    }
+
 }
 
 
@@ -1001,30 +981,27 @@ void ILI9341_DispStringLine_EN (  uint16_t line,  char * pStr )
  * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
  * @retval 无
  */
-void ILI9341_DispString_EN ( 	uint16_t usX ,uint16_t usY,  char * pStr )
+void ILI9341_DispString_EN(uint16_t usX, uint16_t usY,  char* pStr)
 {
-	while ( * pStr != '\0' )
-	{
-		if ( ( usX - ILI9341_DispWindow_X_Star + LCD_Currentfonts->Width ) > LCD_X_LENGTH )
-		{
-			usX = ILI9341_DispWindow_X_Star;
-			usY += LCD_Currentfonts->Height;
-		}
-		
-		if ( ( usY - ILI9341_DispWindow_Y_Star + LCD_Currentfonts->Height ) > LCD_Y_LENGTH )
-		{
-			usX = ILI9341_DispWindow_X_Star;
-			usY = ILI9341_DispWindow_Y_Star;
-		}
-		
-		ILI9341_DispChar_EN ( usX, usY, * pStr);
-		
-		pStr ++;
-		
-		usX += LCD_Currentfonts->Width;
-		
-	}
-	
+    while(* pStr != '\0') {
+        if((usX - ILI9341_DispWindow_X_Star + LCD_Currentfonts->Width) > LCD_X_LENGTH) {
+            usX = ILI9341_DispWindow_X_Star;
+            usY += LCD_Currentfonts->Height;
+        }
+
+        if((usY - ILI9341_DispWindow_Y_Star + LCD_Currentfonts->Height) > LCD_Y_LENGTH) {
+            usX = ILI9341_DispWindow_X_Star;
+            usY = ILI9341_DispWindow_Y_Star;
+        }
+
+        ILI9341_DispChar_EN(usX, usY, * pStr);
+
+        pStr ++;
+
+        usX += LCD_Currentfonts->Width;
+
+    }
+
 }
 
 
@@ -1036,28 +1013,25 @@ void ILI9341_DispString_EN ( 	uint16_t usX ,uint16_t usY,  char * pStr )
  * @note 可使用LCD_SetBackColor、LCD_SetTextColor、LCD_SetColors函数设置颜色
  * @retval 无
  */
-void ILI9341_DispString_EN_YDir (	 uint16_t usX,uint16_t usY ,  char * pStr )
-{	
-	while ( * pStr != '\0' )
-	{
-		if ( ( usY - ILI9341_DispWindow_Y_Star + LCD_Currentfonts->Height ) >LCD_Y_LENGTH  )
-		{
-			usY = ILI9341_DispWindow_Y_Star;
-			usX += LCD_Currentfonts->Width;
-		}
-		
-		if ( ( usX - ILI9341_DispWindow_X_Star + LCD_Currentfonts->Width ) >  LCD_X_LENGTH)
-		{
-			usX = ILI9341_DispWindow_X_Star;
-			usY = ILI9341_DispWindow_Y_Star;
-		}
-		
-		ILI9341_DispChar_EN ( usX, usY, * pStr);
-		
-		pStr ++;
-		
-		usY += LCD_Currentfonts->Height;		
-	}	
+void ILI9341_DispString_EN_YDir(uint16_t usX, uint16_t usY,  char* pStr)
+{
+    while(* pStr != '\0') {
+        if((usY - ILI9341_DispWindow_Y_Star + LCD_Currentfonts->Height) > LCD_Y_LENGTH) {
+            usY = ILI9341_DispWindow_Y_Star;
+            usX += LCD_Currentfonts->Width;
+        }
+
+        if((usX - ILI9341_DispWindow_X_Star + LCD_Currentfonts->Width) >  LCD_X_LENGTH) {
+            usX = ILI9341_DispWindow_X_Star;
+            usY = ILI9341_DispWindow_Y_Star;
+        }
+
+        ILI9341_DispChar_EN(usX, usY, * pStr);
+
+        pStr ++;
+
+        usY += LCD_Currentfonts->Height;
+    }
 }
 
 
@@ -1070,9 +1044,9 @@ void ILI9341_DispString_EN_YDir (	 uint16_t usX,uint16_t usY ,  char * pStr )
   * 	@arg：Font8x16;
   * @retval None
   */
-void LCD_SetFont(sFONT *fonts)
+void LCD_SetFont(sFONT* fonts)
 {
-  LCD_Currentfonts = fonts;
+    LCD_Currentfonts = fonts;
 }
 
 /**
@@ -1080,9 +1054,9 @@ void LCD_SetFont(sFONT *fonts)
   * @param  None.
   * @retval 返回当前字体类型
   */
-sFONT *LCD_GetFont(void)
+sFONT* LCD_GetFont(void)
 {
-  return LCD_Currentfonts;
+    return LCD_Currentfonts;
 }
 
 
@@ -1092,10 +1066,10 @@ sFONT *LCD_GetFont(void)
   * @param  BackColor: 指定背景颜色
   * @retval None
   */
-void LCD_SetColors(uint16_t TextColor, uint16_t BackColor) 
+void LCD_SetColors(uint16_t TextColor, uint16_t BackColor)
 {
-  CurrentTextColor = TextColor; 
-  CurrentBackColor = BackColor;
+    CurrentTextColor = TextColor;
+    CurrentBackColor = BackColor;
 }
 
 /**
@@ -1104,30 +1078,30 @@ void LCD_SetColors(uint16_t TextColor, uint16_t BackColor)
   * @param  BackColor: 用来存储背景颜色的指针变量
   * @retval None
   */
-void LCD_GetColors(uint16_t *TextColor, uint16_t *BackColor)
+void LCD_GetColors(uint16_t* TextColor, uint16_t* BackColor)
 {
-  *TextColor = CurrentTextColor;
-  *BackColor = CurrentBackColor;
+    *TextColor = CurrentTextColor;
+    *BackColor = CurrentBackColor;
 }
 
 /**
   * @brief  设置LCD的前景(字体)颜色,RGB565
-  * @param  Color: 指定前景(字体)颜色 
+  * @param  Color: 指定前景(字体)颜色
   * @retval None
   */
 void LCD_SetTextColor(uint16_t Color)
 {
-  CurrentTextColor = Color;
+    CurrentTextColor = Color;
 }
 
 /**
   * @brief  设置LCD的背景颜色,RGB565
-  * @param  Color: 指定背景颜色 
+  * @param  Color: 指定背景颜色
   * @retval None
   */
 void LCD_SetBackColor(uint16_t Color)
 {
-  CurrentBackColor = Color;
+    CurrentBackColor = Color;
 }
 
 /**
@@ -1139,7 +1113,7 @@ void LCD_SetBackColor(uint16_t Color)
   */
 void LCD_ClearLine(uint16_t Line)
 {
-  ILI9341_Clear(0,Line,LCD_X_LENGTH,((sFONT *)LCD_GetFont())->Height);	/* 清屏，显示全黑 */
+    ILI9341_Clear(0, Line, LCD_X_LENGTH, ((sFONT*)LCD_GetFont())->Height);	/* 清屏，显示全黑 */
 
 }
 /*********************end of file*************************/
@@ -1153,11 +1127,11 @@ void LCD_ClearLine(uint16_t Line)
 */
 void LCD_Ready(void)
 {
-	ILI9341_Init ();         //LCD 初始化
-    ILI9341_GramScan ( 6 );
-	LCD_SetFont(&Font8x16);
-	LCD_SetColors(GREEN,BLACK);
-    ILI9341_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);	/* 清除信息显示区的内容，重来一轮，显示全黑 */
+    ILI9341_Init();          //LCD 初始化
+    ILI9341_GramScan(6);
+    LCD_SetFont(&Font8x16);
+    LCD_SetColors(GREEN, BLACK);
+    ILI9341_Clear(0, 0, LCD_X_LENGTH, LCD_Y_LENGTH);	/* 清除信息显示区的内容，重来一轮，显示全黑 */
 }
 /**
 * @brief 坐标轴以及标注信息生成函数
@@ -1166,25 +1140,25 @@ void LCD_Ready(void)
 */
 void DrawOrdinate(void)      //坐标轴生成封装
 {
-	/*绘制坐标主轴*/
-	ILI9341_DrawLine(28,96, 28,300 );
-	ILI9341_DrawLine(28,300, 232,300 );
-	
-	ILI9341_DrawLine(28,96, 24,100 );
-	ILI9341_DrawLine(28,96, 32,100 );
-	ILI9341_DrawLine(228,296, 232,300 );
-	ILI9341_DrawLine(228,304, 232,300 );
-	
-	/*绘制纵轴刻度*/
-	ILI9341_DrawLine(24,147,28,147  );
-	ILI9341_DrawLine(24,198, 28,198 );
-	ILI9341_DrawLine(24,249, 28,249 );
-	/*绘制标注信息*/
-	ILI9341_DispStringLine_EN( LINE(6),"360" );
-	ILI9341_DispStringLine_EN( LINE(7),"120" );
-	ILI9341_DispStringLine_EN( LINE(19),"  0" );
-	ILI9341_DispChar_EN(232,304 ,'t' );
-	ILI9341_DrawLine(0,112,24,112 );
+    /*绘制坐标主轴*/
+    ILI9341_DrawLine(28, 96, 28, 300);
+    ILI9341_DrawLine(28, 300, 232, 300);
+
+    ILI9341_DrawLine(28, 96, 24, 100);
+    ILI9341_DrawLine(28, 96, 32, 100);
+    ILI9341_DrawLine(228, 296, 232, 300);
+    ILI9341_DrawLine(228, 304, 232, 300);
+
+    /*绘制纵轴刻度*/
+    ILI9341_DrawLine(24, 147, 28, 147);
+    ILI9341_DrawLine(24, 198, 28, 198);
+    ILI9341_DrawLine(24, 249, 28, 249);
+    /*绘制标注信息*/
+    ILI9341_DispStringLine_EN(LINE(6), "360");
+    ILI9341_DispStringLine_EN(LINE(7), "120");
+    ILI9341_DispStringLine_EN(LINE(19), "  0");
+    ILI9341_DispChar_EN(232, 304, 't');
+    ILI9341_DrawLine(0, 112, 24, 112);
 }
 /**
 * @brief 动态波形绘制
@@ -1193,19 +1167,22 @@ void DrawOrdinate(void)      //坐标轴生成封装
 */
 void DrawGraph(void)
 {
-	y_1 = backup;
-	x_2 = x_1 + 3;
-	y_2 = 300 - (Pid.ActualSpeed*1.7);
-	if (y_2<=96) y_2 = 96;
-	ILI9341_DrawLine(x_1,y_1,x_2,y_2);
-	backup = y_2;
-	x_1 += 3;
-	if (x_1>=230)
-	{
-		x_1 = 30;
-		ILI9341_Clear(29,100,200,200);
-		ILI9341_Clear(228,100,4,196);
-	}
+    y_1 = backup;
+    x_2 = x_1 + 3;
+    if(!mode) {     //两种模式下的显示不一样
+        y_2 = 300 - (Pid.ActualSpeed * 1.7);
+    } else {
+        y_2 = 300 - (Pid.ActualSpeed * 0.57);
+    }
+    if(y_2 <= 96) y_2 = 96;
+    ILI9341_DrawLine(x_1, y_1, x_2, y_2);
+    backup = y_2;
+    x_1 += 3;
+    if(x_1 >= 230) {
+        x_1 = 30;
+        ILI9341_Clear(29, 100, 200, 200);
+        ILI9341_Clear(228, 100, 4, 196);
+    }
 }
 
 /**
@@ -1217,31 +1194,28 @@ void DrawGraph(void)
 * @param dischar 将要被显示在屏幕上的字符
 * @return None
 */
-void my_putchar(uint16_t *x,uint16_t *y,const char dischar)
+void my_putchar(uint16_t* x, uint16_t* y, const char dischar)
 {
-	uint16_t X=*x,Y=*y; 
+    uint16_t X = *x, Y = *y;
 
-	if ((dischar == '\r')||(dischar == '\n')||((ILI9341_LESS_PIXEL-X)<7))//三种
-                                                        //情况将会导致换行的发生
-	{
-		*x = 0;
-		*y+=WORD_HIGH;
-		if (*y>=ILI9341_MORE_PIXEL)
-		{
-			*y = 0;
-		}
-	}
-	ILI9341_DispChar_EN( X, Y,dischar );
-	*x+=WORD_WITH;
-	if (*x>=ILI9341_LESS_PIXEL)
-	{
-		*x=0;
-		*y+=WORD_HIGH;
-		if (*y>=ILI9341_MORE_PIXEL)
-		{
-			*y = 0;
-		}
-	}
+    if((dischar == '\r') || (dischar == '\n') || ((ILI9341_LESS_PIXEL - X) < 7)) //三种
+        //情况将会导致换行的发生
+    {
+        *x = 0;
+        *y += WORD_HIGH;
+        if(*y >= ILI9341_MORE_PIXEL) {
+            *y = 0;
+        }
+    }
+    ILI9341_DispChar_EN(X, Y, dischar);
+    *x += WORD_WITH;
+    if(*x >= ILI9341_LESS_PIXEL) {
+        *x = 0;
+        *y += WORD_HIGH;
+        if(*y >= ILI9341_MORE_PIXEL) {
+            *y = 0;
+        }
+    }
 
 }
 /**
@@ -1253,12 +1227,11 @@ void my_putchar(uint16_t *x,uint16_t *y,const char dischar)
 * @param *str 将要被显示在屏幕上的字符串指针
 * @return None
 */
-void my_putstr(uint16_t *x,uint16_t *y, const char *str)
+void my_putstr(uint16_t* x, uint16_t* y, const char* str)
 {
-	while (*str)
-	{
-		my_putchar(x,y,*str++);
-	}
+    while(*str) {
+        my_putchar(x, y, *str++);
+    }
 }
 
 
@@ -1284,12 +1257,12 @@ void my_putstr(uint16_t *x,uint16_t *y, const char *str)
 //	{
 //		x = 1;
 //		y = y + 1;
-//		if(y>6)	
+//		if(y>6)
 //		{
 //			y = 1;
 //		}
 //	}
-//	else 
+//	else
 //	{
 //		LCD_ClearLine(LINE(y));//打印之前要先清除当前行的内容
 //		ILI9341_DispChar_EN ( 8*(x-1), 16*(y-1), dischar );//x,y用于管理字符在屏幕上的位置
@@ -1303,9 +1276,9 @@ void my_putstr(uint16_t *x,uint16_t *y, const char *str)
 //				y = 1;
 //			}
 //		}
-//		
-//		
-//		
+//
+//
+//
 //	}
 //}
 //void my_putstr(const char *str)
