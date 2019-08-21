@@ -33,6 +33,8 @@
 #include "./bsp_led/bsp_led.h"
 #include "./bsp_printf/bsp_printf.h"
 #include "./bsp_key/bsp_key.h"
+#include "./bsp_param/bsp_param.h"
+#include "./bsp_usart/bsp_usart.h"
 
 /** @addtogroup STM32F10x_StdPeriph_Template
   * @{
@@ -241,5 +243,21 @@ void KEYPAD4x4_INTHandler(void)
 		key_int_flag=4;//标志位置1，表示有按键中断
 		EXTI_ClearITPendingBit(EXTI_Line15);   //清除 LINE 上的中断标志位
 	}     
+}
+void DEBUG_USART_IRQHandler(void)
+{
+    uint8_t temp;
+    if(USART_GetFlagStatus(DEBUG_USARTx, USART_IT_RXNE) != RESET) {
+        temp = USART_ReceiveData(DEBUG_USARTx);
+        if((temp != '\r')&&(temp != '\n')) {
+            recv_buff[j] = temp;
+            j += 1;
+        } else if(temp=='\r'){
+            recv_buff[j] = '\0';
+            j = 0;
+            recv_flag = 1;
+        }
+		USART_ClearFlag(DEBUG_USARTx,USART_IT_RXNE); //一定要清除接收中断
+    }
 }
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

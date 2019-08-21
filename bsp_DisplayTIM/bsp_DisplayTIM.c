@@ -29,12 +29,10 @@ void DISPLAYTIM_NVIC_Config ()
 {
 	NVIC_InitTypeDef NVIC_InitStruct;
 	
-//	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-	
 	NVIC_InitStruct.NVIC_IRQChannel = DISPLAYTIM_IRQ;
 	NVIC_InitStruct.NVIC_IRQChannelCmd =  ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority  = 0;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 4;
 	NVIC_Init(&NVIC_InitStruct);
-	
 }
+/***********************************THE END************************************/

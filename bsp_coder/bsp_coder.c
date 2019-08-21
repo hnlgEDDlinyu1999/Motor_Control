@@ -3,11 +3,11 @@
  * @brief 该文件是对定时器编码器模式的配置，由于功能集中且较为独立
  *        故单独形成一个文件
  * @mainpage 编码器模式
- * @author LinYu
+ * @author hnlgEDDLinYu
  * @email 2970658553@qq.com
  * @version 1.0.0
  * @date 2019/8/18
- * @copyright    Copyright (c) LinYu
+ * @copyright    Copyright (c) hnlgEDDLinYu
  */
 #include "./bsp_coder/bsp_coder.h"
 #include "./main.h"
@@ -71,3 +71,4 @@ void Dir_Control(void)       //调电机的转动方向 ，接线：B6-白-IN8 B
         GPIO_ResetBits(GPIOB, GPIO_Pin_6);
     }
 }
+/***********************************THE END************************************/

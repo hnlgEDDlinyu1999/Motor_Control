@@ -18,6 +18,7 @@
 #include "./font/fonts.h"
 #include "./main.h"
 #include "./bsp_printf/bsp_printf.h"
+#include "./bsp_param/bsp_param.h"
 
 
 //根据液晶扫描方向而变化的XY像素宽度
@@ -1233,6 +1234,7 @@ void my_putstr(uint16_t* x, uint16_t* y, const char* str)
         my_putchar(x, y, *str++);
     }
 }
+/***********************************THE END************************************/
 
 
 
@@ -1251,41 +1253,4 @@ void my_putstr(uint16_t* x, uint16_t* y, const char* str)
 
 
 
-//void my_putchar(const char dischar)
-//{
-//	if((dischar=='\r')||(dischar=='\n'))//如遇换行，则控制字符到下一行首位（这里默认、\r\n都是换行）
-//	{
-//		x = 1;
-//		y = y + 1;
-//		if(y>6)
-//		{
-//			y = 1;
-//		}
-//	}
-//	else
-//	{
-//		LCD_ClearLine(LINE(y));//打印之前要先清除当前行的内容
-//		ILI9341_DispChar_EN ( 8*(x-1), 16*(y-1), dischar );//x,y用于管理字符在屏幕上的位置
-//		x= x + 1;//打印完之后要更新x
-//		if(x>30)//打印之前先判断一下，两个if，控制信息显示的轮回
-//		{
-//			x=1;
-//			y=y+1;
-//			if(y>6)
-//			{
-//				y = 1;
-//			}
-//		}
-//
-//
-//
-//	}
-//}
-//void my_putstr(const char *str)
-//{
-//	while(*str)
-//      {
-//            my_putchar(*str++);
-//      }
-//}
 

@@ -38,3 +38,4 @@ void BASIC_TIM_NVIC_Config()
     NVIC_Init(&NVIC_InitStruct);
 
 }
+/***********************************THE END************************************/

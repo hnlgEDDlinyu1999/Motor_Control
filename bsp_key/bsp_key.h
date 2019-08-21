@@ -31,6 +31,5 @@ uint8_t KEYPAD4x4_Read (void);//∂¡’Û¡–º¸≈Ã
 void KEYPAD4x4_INT_INIT (void);
 void Key_Init(void);
 void Key_Handle(void);
-
-
 #endif /*_BSP_KEY_H*/
+/***********************************THE END************************************/

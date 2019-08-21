@@ -35,6 +35,5 @@ void PulseCap_EXTI_Config(void)
     EXTI_InitStruct.EXTI_LineCmd = ENABLE;
 
     EXTI_Init(&EXTI_InitStruct);
-
-
 }
+/***********************************THE END************************************/

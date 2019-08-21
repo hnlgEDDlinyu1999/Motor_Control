@@ -2,11 +2,11 @@
  * @file bsp_key.c
  * @brief 整个工程的按键部分写在该文件当中
  * @mainpage 按键驱动
- * @author LinYu
+ * @author hnlgEDDLinYu
  * @email 2970658553@qq.com
  * @version 1.0.0
  * @date 2019/8/17
- * @copyright    Copyright (c) LinYu
+ * @copyright    Copyright (c) hnlgEDDLinYu
  */
 #include "./bsp_key/bsp_key.h"
 #include "./delay/delay.h"
@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "./bsp_drawgraph/bsp_drawgraph.h"
 #include "./main.h"
+#include "./bsp_param/bsp_param.h"
 
 uint8_t key_int_flag = 0;
 
@@ -231,7 +232,8 @@ void Key_Handle(void)
                     Cusor_Show();
                     break;   //必须要先按，否则其他的部件都不运行
                 } else {
-                    ParamBuff_Update();//按下确定键，先更新到
+                    ParamBuff_Update();//按下确定键，先更新到pidbuff
+					Data_BackUp();//立马备份到EEPROM
                     Param_Update();
                     Param_Refresh();
                     if(!mode) {
@@ -338,6 +340,8 @@ void Key_Handle(void)
                         parambuff.SetV_Disbuff[i + 1] = '\0';
                         i += 1;
                         break;
+					default:
+                        break;
                     }
                     break;
                 case 3:
@@ -396,6 +400,8 @@ void Key_Handle(void)
                         parambuff.Kp_Disbuff[i] = '0';
                         parambuff.Kp_Disbuff[i + 1] = '\0';
                         i += 1;
+                        break;
+					default:
                         break;
                     }
                     break;
@@ -456,6 +462,8 @@ void Key_Handle(void)
                         parambuff.Ki_Disbuff[i + 1] = '\0';
                         i += 1;
                         break;
+					default:
+                        break;
                     }
                     break;
                 case 5:
@@ -515,6 +523,8 @@ void Key_Handle(void)
                         parambuff.Kd_Disbuff[i + 1] = '\0';
                         i += 1;
                         break;
+					default:
+                        break;
                     }
                     break;
                 default :
@@ -527,3 +537,4 @@ void Key_Handle(void)
         }
     }
 }
+/***********************************THE END************************************/

@@ -2,16 +2,18 @@
  * @file main.c
  * @brief 整个工程的主函数写在该文件中
  * @mainpage 主函数文件
- * @author LinYu
+ * @author hnlgEDDLinYu
  * @email 2970658553@qq.com
  * @version 1.0.0
  * @date 2019/8/16
- * @copyright    Copyright (c) LinYu
+ * @copyright    Copyright (c) hnlgEDDLinYu
  */
 #define _MAIN_C
 #include "stdio.h"
+#include "string.h"
 #include "stm32f10x.h"
 #include "./main.h"
+#include "./delay/delay.h"
 #include "./bsp_drawgraph/bsp_drawgraph.h"
 #include "./bsp_PulseCap_EXTI/bsp_PulseCap_EXTI.h"
 #include "./bsp_basetim/bsp_basetim.h"
@@ -19,15 +21,19 @@
 #include "./bsp_pwm/bsp_pwm.h"
 #include "./bsp_led/bsp_led.h"
 #include "./bsp_printf/bsp_printf.h"
-#include "./delay/delay.h"
 #include "./bsp_key/bsp_key.h"
 #include "./bsp_coder/bsp_coder.h"
+#include "./bsp_param/bsp_param.h"
+#include "./bsp_usart/bsp_usart.h"
+#include "./bsp_i2c_ee/bsp_i2c_ee.h"
 
 /*几个重要的全局变量*/
 uint8_t mode = 1;          ///<运行模式，0，1代表两种模式
 uint8_t status_index = 0;  ///<调参时与正常运行时的索引
-uint8_t i = 0;             ///<调参数时，缓冲区索引
+uint8_t i=0,j=0,k=0;       ///<for循环，等某些需要变量指引的场合使用
 uint8_t s;                 //<用来记录键值
+char recv_flag=0,recv_buff[10],tempbuff[10];          ///<接收到上位机命令的标志
+float EE_Buff[4];
 
 uint32_t Pulse_num = 0;    ///<脉冲个数
 volatile float Duty = 0;   ///<占空比
@@ -116,6 +122,11 @@ int main(void)
     /*准备好LCD显示相关*/
     LCD_Ready();
     DrawOrdinate();
+	
+	/*准备好串口接收*/
+	USART_Config();
+	/*准备好e2prom*/
+	I2C_EE_Init();
 
     /*准备好脉冲捕获中断*/
     PulseCap_EXTI_Config();
@@ -150,7 +161,9 @@ int main(void)
     Key_Init();
     /*显示变量的标题*/
     Param_NameShow();
-    Param_Refresh();
+    //Param_Refresh();
+	Param_EE_Update();
+	/**************************/
 
     while(1) {
         Key_Handle();
@@ -161,204 +174,13 @@ int main(void)
             GPIO_ResetBits(GPIOB, GPIO_Pin_6);
             GPIO_ResetBits(GPIOB, GPIO_Pin_7);
         }
-    }
-}
-/**
-* @brief 电机启动，很简单
-* @param None
-* @return None
-*/
-void Motor_Start()
-{
-    GPIO_SetBits(GPIOB, GPIO_Pin_6);
-    PWM_SetDuty(50);
-}
-
-/**
-* @brief 按下确定键之后更新缓冲区的数据到pidbuff
-* @detail 再调参的过程中，并不会将输入的值立即更新到参数，而是放在缓冲区里
-*         当按下确定键之后会更新到参数
-* @param None
-* @return None
-*/
-void ParamBuff_Update(void)    //将数据更新到pidbuff
-{
-    switch(status_index) {
-    case 1:
-        mode = ((uint8_t)(my_atof(parambuff.Mode_Disbuff)));
-        break;
-    default:
-        break;
-    }
-    if(!mode) {
-        switch(status_index) {
-        case 2:
-            PidV_Buff.SetSpeed = my_atof(parambuff.SetV_Disbuff);
-            break;
-        case 3:
-            PidV_Buff.Kp = my_atof(parambuff.Kp_Disbuff);
-            break;
-        case 4:
-            PidV_Buff.Ki = my_atof(parambuff.Ki_Disbuff);
-            break;
-        case 5:
-            PidV_Buff.Kd = my_atof(parambuff.Kd_Disbuff);
-            break;
-        default:
-            break;
-        }
-    } else {
-        switch(status_index) {
-        case 2:
-            PidW_Buff.SetSpeed = my_atof(parambuff.SetV_Disbuff);
-            break;
-        case 3:
-            PidW_Buff.Kp = my_atof(parambuff.Kp_Disbuff);
-            break;
-        case 4:
-            PidW_Buff.Ki = my_atof(parambuff.Ki_Disbuff);
-            break;
-        case 5:
-            PidW_Buff.Kd = my_atof(parambuff.Kd_Disbuff);
-            break;
-        default:
-            break;
+		if(recv_flag) {
+            recv_flag = 0;
+			my_printf(8,LINE(3),"PC_Cmd:%c:%f",recv_buff[0],my_atof((recv_buff+2)));
+            PC_CommandHandle();
         }
     }
 }
-/**
-* @brief 按下确定键之后更新pidbuff的数据到参数
-* @detail 当按下确定键之后会更新到参数 
-*    当
-* @param None
-* @return None
-*/
-void  Param_Update(void)
-{
-    if(!mode) {
-        Pid.SetSpeed = PidV_Buff.SetSpeed;
-        Pid.Kp = PidV_Buff.Kp;
-        Pid.Ki = PidV_Buff.Ki;
-        Pid.Kd = PidV_Buff.Kd;
-    } else {
-        Pid.SetSpeed = PidW_Buff.SetSpeed;
-        Pid.Kp = PidW_Buff.Kp;
-        Pid.Ki = PidW_Buff.Ki;
-        Pid.Kd = PidW_Buff.Kd;
-    }
-}
-/**
-* @brief 各项参数显示刷新
-* @param None
-* @return None
-*/
-void Param_Refresh(void)      //将各项参数显示到屏幕,要写在handle之前
-{
-    my_printf(48, 16, "%d", mode);
-    my_printf(168, 16, "%f", Pid.SetSpeed);
-    my_printf(24, 32, "%f", Pid.Kp);
-    my_printf(104, 32, "%f", Pid.Ki);
-    my_printf(184, 32, "%f", Pid.Kd);
-}
-/**
-* @brief 显示各项参数的名字信息到屏幕
-* @param None
-* @return None
-*/
-void Param_NameShow(void)
-{
-    my_printf(8,   0, "value:");
-    my_printf(128, 0, "duty:");
-    my_printf(8,  16, "mode:");
-    my_printf(128, 16, "goal:");
-    my_printf(8,  32, "P:");
-    my_printf(88, 32, "I:");
-    my_printf(168, 32, "D:");
-}
-/**
-* @brief 调参过程中各项参数动态刷新
-* @detail 在调参过程中，每按一次按键屏幕都会实时更新所输入的数字，更加人性化
-* @param None
-* @return None
-*/
-void Param_DynaRefresh(void)     //此函数应当只在调参状态下工作 if（！status_index)
-{
-    switch(status_index) {
-    case 1:
-        my_printf(48, 16, "%f", my_atof(parambuff.Mode_Disbuff));
-        break;
-    case 2:
-        my_printf(168, 16, "%f", my_atof(parambuff.SetV_Disbuff));
-        break;
-    case 3:
-        my_printf(24, 32, "%f", my_atof(parambuff.Kp_Disbuff));
-        break;
-    case 4:
-        my_printf(104, 32, "%f", my_atof(parambuff.Ki_Disbuff));
-        break;
-    case 5:
-        my_printf(184, 32, "%f", my_atof(parambuff.Kd_Disbuff));
-        break;
-    default :
-        break;
-    }
 
-}
-/**
-* @brief 光标指示所调的具体是哪一个参数
-* @detail 用*符号来标示所调的具体是哪一个参数
-*
-* @param None
-* @return None
-*/
-void Cusor_Show(void)      //此函数用于指示调的是哪个参数,在中断里边刷新
-{
-    switch(status_index) {
-    case 1:
-        my_printf(0, 16, "%c", '*');
-        my_printf(120, 16, "%c", ' ');
-        my_printf(0, 32, "%c", ' ');
-        my_printf(80, 32, "%c", ' ');
-        my_printf(160, 32, "%c", ' ');
-        break;
-    case 2:
-        my_printf(0, 16, "%c", ' ');
-        my_printf(120, 16, "%c", '*');
-        my_printf(0, 32, "%c", ' ');
-        my_printf(80, 32, "%c", ' ');
-        my_printf(160, 32, "%c", ' ');
-        break;
-    case 3:
-        my_printf(0, 16, "%c", ' ');
-        my_printf(120, 16, "%c", ' ');
-        my_printf(0, 32, "%c", '*');
-        my_printf(80, 32, "%c", ' ');
-        my_printf(160, 32, "%c", ' ');
-        break;
-    case 4:
-        my_printf(0, 16, "%c", ' ');
-        my_printf(120, 16, "%c", ' ');
-        my_printf(0, 32, "%c", ' ');
-        my_printf(80, 32, "%c", '*');
-        my_printf(160, 32, "%c", ' ');
-        break;
-    case 5:
-        my_printf(0, 16, "%c", ' ');
-        my_printf(120, 16, "%c", ' ');
-        my_printf(0, 32, "%c", ' ');
-        my_printf(80, 32, "%c", ' ');
-        my_printf(160, 32, "%c", '*');
-        break;
-    case 0:
-        my_printf(0, 16, "%c", ' ');
-        my_printf(120, 16, "%c", ' ');
-        my_printf(0, 32, "%c", ' ');
-        my_printf(80, 32, "%c", ' ');
-        my_printf(160, 32, "%c", ' ');
-        break;
-    default :
-        break;
-    }
-}
-
+/***********************************THE END************************************/
 

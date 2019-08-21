@@ -11,3 +11,4 @@ void TIM_PWM_Config(void);
 void PWM_Enable(void);
 void PWM_SetDuty(float duty);
 #endif /*_BSP_PWM_C*/
+/***********************************THE END************************************/
