@@ -1,4 +1,4 @@
-# Motor_Control##欢迎到访
+# Motor_Control欢迎到访
 
 + `my_printf`函数支持`%f、%c、%x、%d、%s`等格式控制字符，`\r、\n`转义字符，屏幕信息显示<font color=#FF0000>完全</font>使用`my_printf`(图像除外)。
 - 角度信息采集使用针对电机控制的<font color=#FF0000>硬件编码器</font>接口，计算量小。
