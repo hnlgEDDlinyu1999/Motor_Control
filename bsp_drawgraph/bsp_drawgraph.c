@@ -20,6 +20,8 @@
 #include "./bsp_printf/bsp_printf.h"
 #include "./bsp_param/bsp_param.h"
 
+/*绘制波形所需要的变量*/
+uint16_t x_1 = 30, x_2 = 0, y_1 = 0, y_2 = 0, backup = 300;
 
 //根据液晶扫描方向而变化的XY像素宽度
 //调用ILI9341_GramScan函数设置方向时会自动更改

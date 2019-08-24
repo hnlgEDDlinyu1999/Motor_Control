@@ -233,7 +233,6 @@ void Key_Handle(void)
                     break;   //必须要先按，否则其他的部件都不运行
                 } else {
                     ParamBuff_Update();//按下确定键，先更新到pidbuff
-					Data_BackUp();//立马备份到EEPROM
                     Param_Update();
                     Param_Refresh();
                     if(!mode) {

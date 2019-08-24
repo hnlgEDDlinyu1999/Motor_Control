@@ -2,7 +2,7 @@
 #define _MAIN_H
 
 #define PIDV_BUFF_ADDR      10
-#define PIDW_BUFF_ADDR      60
+#define PIDW_BUFF_ADDR      80
 
 typedef struct {
     char Mode_Disbuff[2];
@@ -30,7 +30,6 @@ extern _Pid Pid;
 extern _Pid PidV_Buff;             //新建一个pid结构体,这里边保存着整套的适应于一种模式的参数
 extern _Pid PidW_Buff;             //新建一个pid结构体,这里边保存着整套的适应于一种模式的参数
 extern _dissbuff parambuff;
-extern uint16_t x_1, x_2, y_1, y_2, backup;
 extern float EE_Buff[4];
 
 extern uint8_t mode;               ///<运行模式，0，1代表两种模式

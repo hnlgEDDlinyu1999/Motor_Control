@@ -51,24 +51,24 @@ void Dir_Control_GPIO_Config(void)
     GPIO_InitTypeDef GPIO_InitStruct;
 
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_12;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
 
-    GPIO_Init(GPIOB, &GPIO_InitStruct);
+    GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
-void Dir_Control(void)       //调电机的转动方向 ，接线：B6-白-IN8 B7-黑-IN7
+void Dir_Control(void)       //调电机的转动方向 ，接线：A11-白-IN8 A12-黑-IN7
 //倒转 ：IN7低，IN8高
 //正转 ：IN7高，IN8低
 {
-    if(Pid.ActualSpeed > Pid.SetSpeed) {  //超过就倒转，pin6高，pin7低	set高，reset低
-        GPIO_SetBits(GPIOB, GPIO_Pin_6);
-        GPIO_ResetBits(GPIOB, GPIO_Pin_7);
-    } else {                              //否则正转，pin6低，pin7高
-        GPIO_SetBits(GPIOB, GPIO_Pin_7);
-        GPIO_ResetBits(GPIOB, GPIO_Pin_6);
+    if(Pid.ActualSpeed > Pid.SetSpeed) {  //超过就倒转，pin11高，pin12低	set高，reset低
+        GPIO_SetBits(GPIOA, GPIO_Pin_11);
+        GPIO_ResetBits(GPIOA, GPIO_Pin_12);
+    } else {                              //否则正转，pin11低，pin12高
+        GPIO_SetBits(GPIOA, GPIO_Pin_12);
+        GPIO_ResetBits(GPIOA, GPIO_Pin_11);
     }
 }
 /***********************************THE END************************************/
