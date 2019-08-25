@@ -25,8 +25,10 @@
 #include "./bsp_coder/bsp_coder.h"
 #include "./bsp_param/bsp_param.h"
 #include "./bsp_usart/bsp_usart.h"
-#include "./bsp_i2c_ee/bsp_i2c_ee.h"
 #include <string.h>
+#include "./bsp_I2c/i2c.h"
+#include "./bsp_eeprom/eeprom.h"
+#include "./config.h"
 
 /*几个重要的全局变量*/
 uint8_t mode = 1;          ///<运行模式，0，1代表两种模式
@@ -58,17 +60,17 @@ float Pid_Cal(void);
 * @note Null
 */
 int main(void)
-{
+{	
+	I2CInit(); 
+	
     /*准备好LED小灯用于指示运行状态*/
     LED_GPIO_Config();
     /*准备好LCD显示相关*/
     LCD_Ready();
     DrawOrdinate();
-
-    /*准备好串口接收*/
+	/*准备好串口接收*/
     USART_Config();
     /*准备好e2prom*/
-    I2C_EE_Init();
 
     /*准备好脉冲捕获中断*/
     PulseCap_EXTI_Config();
@@ -97,15 +99,17 @@ int main(void)
     GPIO_SetBits(GPIOB, GPIO_Pin_6);
     PWM_SetDuty(50);
     /*Pid调速初始化*/
-    Pid_Init();
-    PidBuff_Init();
+//    Pid_Init();
+//    PidBuff_Init();
     /*准备好按键*/
     Key_Init();
     /*显示变量的标题*/
+    Data_Fetch();
+	Param_Update();
     Param_NameShow();
     Param_Refresh();
-    /**************************/
-//	Data_BackUp();
+
+
     while(1) {
         Key_Handle();
         if(mode) {

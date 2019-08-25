@@ -17,31 +17,32 @@
 #include "./bsp_param/bsp_param.h"
 
 uint8_t key_int_flag = 0;
+uint8_t mode_change_flag = 0;
 
-void KEYPAD4x4_Init(void)  //微动开关的接口初始化
+void KEYPAD4x4_Init(void)
 {
-    GPIO_InitTypeDef  GPIO_InitStruct; //定义GPIO的初始化枚举结构
-    GPIO_InitStruct.GPIO_Pin = KEYa | KEYb | KEYc | KEYd; //选择端口号（0~15或all）
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU; //选择IO接口工作方式 //上拉电阻
+    GPIO_InitTypeDef  GPIO_InitStruct;
+    GPIO_InitStruct.GPIO_Pin = KEYa | KEYb | KEYc | KEYd;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;
     GPIO_Init(KEYPAD4x4PORT, &GPIO_InitStruct);
 
-    GPIO_InitStruct.GPIO_Pin = KEY1 | KEY2 | KEY3 | KEY4; //选择端口号（0~15或all）
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP; //选择IO接口工作方式 //上拉电阻
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz; //设置IO接口速度（2/10/50MHz）
+    GPIO_InitStruct.GPIO_Pin = KEY1 | KEY2 | KEY3 | KEY4;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(KEYPAD4x4PORT, &GPIO_InitStruct);
 
 }
 
-void KEYPAD4x4_Init_Toggle(void)  //微动开关的接口初始化2（用于IO工作方式反转）
+void KEYPAD4x4_Init_Toggle(void)  //接口初始化2（用于IO工作方式反转）
 {
-    GPIO_InitTypeDef  GPIO_InitStruct; //定义GPIO的初始化枚举结构
-    GPIO_InitStruct.GPIO_Pin = KEY1 | KEY2 | KEY3 | KEY4; //选择端口号（0~15或all）
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU; //选择IO接口工作方式 //上拉电阻
+    GPIO_InitTypeDef  GPIO_InitStruct;
+    GPIO_InitStruct.GPIO_Pin = KEY1 | KEY2 | KEY3 | KEY4;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;
     GPIO_Init(KEYPAD4x4PORT, &GPIO_InitStruct);
 
-    GPIO_InitStruct.GPIO_Pin = KEYa | KEYb | KEYc | KEYd; //选择端口号（0~15或all）
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP; //选择IO接口工作方式 //上拉电阻
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz; //设置IO接口速度（2/10/50MHz）
+    GPIO_InitStruct.GPIO_Pin = KEYa | KEYb | KEYc | KEYd;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(KEYPAD4x4PORT, &GPIO_InitStruct);
 
 }
@@ -78,7 +79,7 @@ uint8_t KEYPAD4x4_Read(void)
         switch(a) { //对比数据值
         case 0xee:
             b =  1;
-            break;//对比得到的键值给b一个应用数据
+            break;//对比得到的键值
         case 0xde:
             b =  2;
             break;
@@ -145,12 +146,12 @@ uint8_t KEYPAD4x4_Read(void)
 */
 void KEYPAD4x4_INT_INIT(void)
 {
-    NVIC_InitTypeDef  NVIC_InitStruct;	//定义结构体变量
+    NVIC_InitTypeDef  NVIC_InitStruct;
     EXTI_InitTypeDef  EXTI_InitStruct;
 
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
 
-    KEYPAD4x4_APBxPeriphClockCmd(KEYPAD4x4_GPIO_CLK, ENABLE); //启动GPIO时钟 （需要与复用时钟一同启动）
+    KEYPAD4x4_APBxPeriphClockCmd(KEYPAD4x4_GPIO_CLK, ENABLE);
     KEYPAD4x4_APBxPeriphClockCmd(KEYPAD4x4_INT_AFIO_CLK, ENABLE); //配置端口中断需要启用复用时钟
 
     GPIO_EXTILineConfig(KEYPAD4x4_INT_PORTSOURCE, GPIO_PinSource12);
@@ -234,7 +235,13 @@ void Key_Handle(void)
                 } else {
                     ParamBuff_Update();//按下确定键，先更新到pidbuff
                     Param_Update();
-                    Param_Refresh();
+                    
+					Data_BackUp();
+					
+					
+					Data_Fetch();
+					Param_Update();
+					Param_Refresh();
                     if(!mode) {
                         Motor_Start();
                     }
@@ -339,7 +346,7 @@ void Key_Handle(void)
                         parambuff.SetV_Disbuff[i + 1] = '\0';
                         i += 1;
                         break;
-					default:
+                    default:
                         break;
                     }
                     break;
@@ -400,7 +407,7 @@ void Key_Handle(void)
                         parambuff.Kp_Disbuff[i + 1] = '\0';
                         i += 1;
                         break;
-					default:
+                    default:
                         break;
                     }
                     break;
@@ -461,7 +468,7 @@ void Key_Handle(void)
                         parambuff.Ki_Disbuff[i + 1] = '\0';
                         i += 1;
                         break;
-					default:
+                    default:
                         break;
                     }
                     break;
@@ -522,7 +529,7 @@ void Key_Handle(void)
                         parambuff.Kd_Disbuff[i + 1] = '\0';
                         i += 1;
                         break;
-					default:
+                    default:
                         break;
                     }
                     break;

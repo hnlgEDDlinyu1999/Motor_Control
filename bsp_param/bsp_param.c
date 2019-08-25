@@ -13,8 +13,9 @@
 #include "./main.h"
 #include "./bsp_printf/bsp_printf.h"
 #include "./bsp_pwm/bsp_pwm.h"
-#include "./bsp_i2c_ee/bsp_i2c_ee.h"
-
+#include "./bsp_I2c/i2c.h"
+#include "./bsp_eeprom/eeprom.h"
+#include "./config.h"
 /**
 * @brief 按下确定键之后更新缓冲区的数据到pidbuff
 * @detail 再调参的过程中，并不会将输入的值立即更新到参数，而是放在缓冲区里
@@ -95,7 +96,7 @@ void  Param_Update(void)
 */
 void Param_Refresh(void)      //将各项参数显示到屏幕,要写在handle之前
 {
-    my_printf(48, 16, "%d", mode);
+    my_printf(48, 16, "     %d", mode);
     my_printf(168, 16, "%f", Pid.SetSpeed);
     my_printf(24, 32, "%f", Pid.Kp);
     my_printf(104, 32, "%f", Pid.Ki);
@@ -215,13 +216,13 @@ void Data_BackUp(void)
         EE_Buff[1] = PidV_Buff.Kp;
         EE_Buff[2] = PidV_Buff.Ki;
         EE_Buff[3] = PidV_Buff.Kd;
-        I2C_EE_BufferWrite((void*)EE_Buff, PIDV_BUFF_ADDR, sizeof(EE_Buff));
+        E2Write((void*)EE_Buff, PIDV_BUFF_ADDR, sizeof(EE_Buff));
     } else {
         EE_Buff[0] = PidW_Buff.SetSpeed;
         EE_Buff[1] = PidW_Buff.Kp;
         EE_Buff[2] = PidW_Buff.Ki;
         EE_Buff[3] = PidW_Buff.Kd;
-        I2C_EE_BufferWrite((void*)EE_Buff, PIDW_BUFF_ADDR, sizeof(EE_Buff));
+        E2Write((void*)EE_Buff, PIDW_BUFF_ADDR, sizeof(EE_Buff));
     }
 }
 /**
@@ -234,30 +235,20 @@ void Data_BackUp(void)
 void Data_Fetch(void)
 {
     if(!mode) {
-        I2C_EE_BufferRead((void*)EE_Buff, PIDV_BUFF_ADDR, sizeof(EE_Buff));
+        E2Read((void*)EE_Buff, PIDV_BUFF_ADDR, sizeof(EE_Buff));
         PidV_Buff.SetSpeed = EE_Buff[0];
         PidV_Buff.Kp = EE_Buff[1];
         PidV_Buff.Ki = EE_Buff[2];
         PidV_Buff.Kd = EE_Buff[3];
     } else {
-        I2C_EE_BufferRead((void*)EE_Buff, PIDW_BUFF_ADDR, sizeof(EE_Buff));
+        E2Read((void*)EE_Buff, PIDW_BUFF_ADDR, sizeof(EE_Buff));
         PidW_Buff.SetSpeed = EE_Buff[0];
         PidW_Buff.Kp = EE_Buff[1];
         PidW_Buff.Ki = EE_Buff[2];
         PidW_Buff.Kd = EE_Buff[3];
     }
 }
-/**
-* @brief 与EEPROM相关的参数更新动作
-* @param None
-* @return None
-*/
-void Param_EE_Update(void)
-{
-    Data_Fetch();
-    Param_Update();
-    Param_Refresh();
-}
+
 /**
 * @brief 电机启动，很简单
 * @param None
