@@ -13,8 +13,7 @@ void BASIC_TIM_Config()
     TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
 
     TIM_TimeBaseInit(BASE_TIMx,  &TIM_TimeBaseInitStruct);
-
-
+	
     TIM_ClearFlag(BASE_TIMx, TIM_FLAG_Update);
     TIM_ITConfig(BASE_TIMx, TIM_IT_Update, ENABLE);
     TIM_Cmd(BASE_TIMx, ENABLE);
@@ -36,6 +35,5 @@ void BASIC_TIM_NVIC_Config()
     NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority  = 0;
     NVIC_InitStruct.NVIC_IRQChannelSubPriority = 3;
     NVIC_Init(&NVIC_InitStruct);
-
 }
 /***********************************THE END************************************/

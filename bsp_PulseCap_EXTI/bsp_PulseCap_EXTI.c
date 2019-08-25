@@ -12,7 +12,6 @@ void NVIC_Config(void)
     NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 
     NVIC_Init(&NVIC_InitStruct);
-
 }
 
 void PulseCap_EXTI_Config(void)

@@ -24,6 +24,8 @@
 
 
 extern uint8_t key_int_flag;
+extern uint8_t status_index;  ///<调参时与正常运行时的索引
+extern uint8_t s;                 //<用来记录键值
 
 void KEYPAD4x4_Init(void);//初始化
 void KEYPAD4x4_Init_Toggle(void);//用于IO工作方式反转

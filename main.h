@@ -34,9 +34,9 @@ extern float EE_Buff[4];
 
 extern uint8_t mode;               ///<运行模式，0，1代表两种模式
 extern uint8_t status_index;       ///<调参时与正常运行时的索引
-extern uint8_t i, j, k, recv_flag;          ///<调参数时，缓冲区索引
+extern uint8_t i, j, k;          ///<调参数时，缓冲区索引
 extern uint8_t s;                  ///<用来记录键值
-extern char recv_buff[10],tempbuff[10];         ///<串口接收缓存区
+
 #endif /*_MAIN_C*/
 
 extern volatile float Duty;        //占空比

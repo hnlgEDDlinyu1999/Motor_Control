@@ -45,11 +45,9 @@ void TIM3_Encoder_Config(void)
     TIM_Cmd(ENCODER_TIM, ENABLE);
 }
 
-
 void Dir_Control_GPIO_Config(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
-
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 
@@ -66,7 +64,8 @@ void Dir_Control(void)       //调电机的转动方向 ，接线：A11-白-IN8 
     if(Pid.ActualSpeed > Pid.SetSpeed) {  //超过就倒转，pin11高，pin12低	set高，reset低
         GPIO_SetBits(GPIOA, GPIO_Pin_11);
         GPIO_ResetBits(GPIOA, GPIO_Pin_12);
-    } else {                              //否则正转，pin11低，pin12高
+    } 
+	if(Pid.ActualSpeed < Pid.SetSpeed)	{                              //否则正转，pin11低，pin12高
         GPIO_SetBits(GPIOA, GPIO_Pin_12);
         GPIO_ResetBits(GPIOA, GPIO_Pin_11);
     }

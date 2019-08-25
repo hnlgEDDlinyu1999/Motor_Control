@@ -13,6 +13,7 @@
 
 #include "stm32f10x.h"
 #include "./main.h"
+#include <stdlib.h>
 #include "./delay/delay.h"
 #include "./bsp_drawgraph/bsp_drawgraph.h"
 #include "./bsp_PulseCap_EXTI/bsp_PulseCap_EXTI.h"
@@ -31,11 +32,9 @@
 #include "./config.h"
 
 /*几个重要的全局变量*/
-uint8_t mode = 1;          ///<运行模式，0，1代表两种模式
-uint8_t status_index = 0;  ///<调参时与正常运行时的索引
+uint8_t mode = 0;          ///<运行模式，0，1代表两种模式
 uint8_t i = 0, j = 0, k = 0; ///<for循环，等某些需要变量指引的场合使用
-uint8_t s;                 //<用来记录键值
-char recv_flag = 0, recv_buff[10], tempbuff[10];      ///<接收到上位机命令的标志
+
 float EE_Buff[4];
 uint32_t Pulse_num = 0;    ///<脉冲个数
 volatile float Duty = 0;   ///<占空比
@@ -45,8 +44,6 @@ _Pid PidV_Buff;             //新建一个pid结构体,这里边保存着整套的适应于一种模式
 _Pid PidW_Buff;             //新建一个pid结构体,这里边保存着整套的适应于一种模式的参数
 _dissbuff parambuff;        //新建一个dissbuff结构体，关于这个结构体请看main.h
 
-void Pid_Init(void);
-void PidBuff_Init(void);
 float Pid_Cal(void);
 /**
 * @brief 主函数
@@ -60,66 +57,60 @@ float Pid_Cal(void);
 * @note Null
 */
 int main(void)
-{	
-	I2CInit(); 
-	
-    /*准备好LED小灯用于指示运行状态*/
+{
+	delay_ms(100); //上电时等待器件就绪
+	/*准备好软件模拟I2C*/
+    I2CInit();
+	/*准备好LED小灯用于指示运行状态*/
     LED_GPIO_Config();
-    /*准备好LCD显示相关*/
+	/*准备好LCD显示相关*/
     LCD_Ready();
+	/*初始化坐标系*/
     DrawOrdinate();
 	/*准备好串口接收*/
     USART_Config();
-    /*准备好e2prom*/
-
-    /*准备好脉冲捕获中断*/
+	/*准备好脉冲捕获中断*/
     PulseCap_EXTI_Config();
-
-    /*准备好PWM生成定时器*/
-    TIM_PWM_GPIO_Congig();
+	/*准备好PWM生成定时器*/
+	TIM_PWM_GPIO_Congig();
     TIM_PWM_Config();
     PWM_Enable();
-
-    /*准备好基本定时器6开启中断进行PID调速*/
+	/*准备好基本定时器6开启中断进行PID调速*/
     BASIC_TIM_Config();
     BASIC_TIM_NVIC_Config();
     BASE_TIM_APBxClockCmd(BASE_TIM_Clock, ENABLE);
-    /*准备好基本定时器7开启中断进行信息显示*/
+	/*准备好基本定时器7开启中断进行信息显示*/
     DISPLAYTIM_Config();
     DISPLAYTIM_NVIC_Config();
-
-    /*准备好角度模式下电机方向控制的GPIO*/
+	/*准备好角度模式下电机方向控制的GPIO*/
     Dir_Control_GPIO_Config();
-
-    /*准备好角度模式下编码器相关工作*/
+	/*准备好角度模式下编码器相关工作*/
     TIM3_Encoder_GPIO_Config();
     TIM3_Encoder_Config();
-
-    /*启动电机*/
-    GPIO_SetBits(GPIOB, GPIO_Pin_6);
+	/*启动电机*/    
+	GPIO_SetBits(GPIOA, GPIO_Pin_12);
     PWM_SetDuty(50);
-    /*Pid调速初始化*/
-//    Pid_Init();
-//    PidBuff_Init();
-    /*准备好按键*/
-    Key_Init();
-    /*显示变量的标题*/
+	/*准备好按键*/
+    Key_Init(); 
+	/*取回备份的数据*/
     Data_Fetch();
-	Param_Update();
+	/*更新缓冲区的数据*/
+    Param_Update();
+	/*显示变量的标题*/
     Param_NameShow();
+	/*参数显示刷新*/
     Param_Refresh();
-
-
+	
     while(1) {
-        Key_Handle();
+        Key_Handle();//按键处理函数需要一直运行
         if(mode) {
-            Dir_Control();
+            Dir_Control();//在角度模式下，要时刻纠正电机的转向
         }
         if(status_index) {  //处于调整状态时刹车
-            GPIO_ResetBits(GPIOB, GPIO_Pin_6);
-            GPIO_ResetBits(GPIOB, GPIO_Pin_7);
+            GPIO_ResetBits(GPIOA, GPIO_Pin_11);
+            GPIO_ResetBits(GPIOA, GPIO_Pin_12);
         }
-        if(recv_flag) {
+        if(recv_flag) {  //接收到PC发来的命令，并进行处理
             recv_flag = 0;
             my_printf(8, LINE(3), "PC_Cmd:%c:%f", recv_buff[0], my_atof((recv_buff + 2)));
             Pid.SetSpeed = my_atof((recv_buff + 2));
@@ -127,44 +118,6 @@ int main(void)
             PC_CommandHandle();
         }
     }
-}
-/*Pid相关的三个函数比较简单，可暂不独立成文件*/
-/**
-* @brief Pid计算初始化函数
-* @detail 用于初始化Pid计算所需的参数
-*
-* @param None
-* @return None
-*/
-void Pid_Init(void)         //上电初始化一种模式即可，后期可以再改
-{
-    Pid.SetSpeed = 150;			//150度
-    Pid.Err = 0;
-    Pid.Err1 = 0;
-    Pid.Err2 = 0;
-    Pid.Kp = 0.5; //适当的需要稍微大一点
-    Pid.Ki = 0.1;
-    Pid.Kd = 0.05;
-}
-/**
-* @brief Pidbuff初始化函数
-* @detail 用于初始化pidbuff
-*
-* @param None
-* @return None
-*/
-void PidBuff_Init()
-{
-    PidV_Buff.SetSpeed = 50;
-    PidV_Buff.Kp = 0.004;
-    PidV_Buff.Ki = 0.1;
-    PidV_Buff.Kd = 0.05;
-
-    PidW_Buff.SetSpeed = 150;
-    PidW_Buff.Kp = 0.5;
-    PidW_Buff.Ki = 0.1;
-    PidW_Buff.Kd = 0.05;
-
 }
 /**
 * @brief Pid计算函数
@@ -177,7 +130,11 @@ void PidBuff_Init()
 float Pid_Cal()     //这个函数应当适应于两种模式，因为原理都一样
 {
     float Adjust = 0;
-    Pid.Err = Pid.SetSpeed - Pid.ActualSpeed;
+	if (mode)
+    Pid.Err = abs(Pid.SetSpeed - Pid.ActualSpeed);
+	else {
+		Pid.Err = Pid.SetSpeed - Pid.ActualSpeed;
+	}
     Adjust = Pid.Kp * (Pid.Err - Pid.Err1) + Pid.Ki * Pid.Err + Pid.Kd * (Pid.Err - 2 * Pid.Err1 + Pid.Err2);
     Pid.Err2 = Pid.Err1;
     Pid.Err1 = Pid.Err;
@@ -185,4 +142,3 @@ float Pid_Cal()     //这个函数应当适应于两种模式，因为原理都一样
     return Adjust;
 }
 /***********************************THE END************************************/
-

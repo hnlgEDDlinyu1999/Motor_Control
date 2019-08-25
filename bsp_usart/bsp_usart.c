@@ -1,8 +1,20 @@
+/**
+ * @file bsp_usart.c
+ * @brief 包含串口通信驱动，用于上位机控制
+ * @mainpage 串口通信
+ * @author hnlgEDDLinYu
+ * @email 2970658553@qq.com
+ * @version 1.0.0
+ * @date 2019/8/19
+ * @copyright    Copyright (c) hnlgEDDLinYu
+ */
 #include "./bsp_usart/bsp_usart.h"
 #include "./bsp_printf/bsp_printf.h"
 #include "stdio.h"
 #include "./main.h"
 #include "./bsp_param/bsp_param.h"
+
+char recv_flag = 0, recv_buff[10];      ///<接收到上位机命令的标志
 
 static void NVIC_Configuration(void)
 {

@@ -25,7 +25,6 @@ void TIM_PWM_Config(void)
     TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
     TIM_TimeBaseInit(TIM1, &TIM_TimeBaseInitStruct);
 
-
     TIM_OCInitTypeDef TIM_OCInitStruct;
     TIM_OCInitStruct.TIM_OCMode = TIM_OCMode_PWM1;
     TIM_OCInitStruct.TIM_OutputState = TIM_OutputState_Enable;

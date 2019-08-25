@@ -20,21 +20,20 @@
 uint8_t E2ReadByte(uint8_t addr)
 {
     uint8_t dat;
-    
+
     do { //用寻址操作查询当前是否可进行读写
         I2CStart();
-        if (I2CWrite(0x50<<1)) //寻址器件，应答则跳出循环，否则继续查询
-        {
+        if(I2CWrite(0x50 << 1)) { //寻址器件，应答则跳出循环，否则继续查询
             break;
         }
         I2CStop();
     } while(1);
     I2CWrite(addr);           //写入存储地址
     I2CStart();               //发送重复启动信号
-    I2CWrite((0x50<<1)|0x01); //寻址器件，后续为读操作
+    I2CWrite((0x50 << 1) | 0x01); //寻址器件，后续为读操作
     dat = I2CReadNAK();       //读取一个字节数据
     I2CStop();
-    
+
     return dat;
 }
 
@@ -49,8 +48,7 @@ void E2WriteByte(uint8_t addr, uint8_t dat)
 {
     do { //用寻址操作查询当前是否可进行读写
         I2CStart();
-        if (I2CWrite(0x50<<1)) //寻址器件，应答则跳出循环，否则继续查询
-        {
+        if(I2CWrite(0x50 << 1)) { //寻址器件，应答则跳出循环，否则继续查询
             break;
         }
         I2CStop();
@@ -67,24 +65,22 @@ void E2WriteByte(uint8_t addr, uint8_t dat)
 *
 * @param addr E2中的起始地址
 * @param *buf 数据接收指针
-* @param len 读取长度 
+* @param len 读取长度
 * @return None
 */
-void E2Read(uint8_t *buf, uint8_t addr, int len)
+void E2Read(uint8_t* buf, uint8_t addr, int len)
 {
     do { //用寻址操作查询当前是否可进行读写
         I2CStart();
-        if (I2CWrite(0x50<<1)) //寻址器件，应答则跳出循环，否则继续查询
-        {
+        if(I2CWrite(0x50 << 1)) { //寻址器件，应答则跳出循环，否则继续查询
             break;
         }
         I2CStop();
     } while(1);
     I2CWrite(addr);            //写入起始地址
     I2CStart();                //发送重复启动信号
-    I2CWrite((0x50<<1)|0x01);  //寻址器件，后续为读操作
-    while (len > 1)            //连续读取len-1个字节
-    {
+    I2CWrite((0x50 << 1) | 0x01); //寻址器件，后续为读操作
+    while(len > 1) {           //连续读取len-1个字节
         *buf++ = I2CReadACK(); //最后字节之前为读取操作+应答
         len--;
     }
@@ -99,33 +95,31 @@ void E2Read(uint8_t *buf, uint8_t addr, int len)
 *
 * @param addr E2中的起始地址
 * @param *buf 源数据指针
-* @param len 读取长度 
+* @param len 读取长度
 * @return None
 */
-void E2Write(const uint8_t *buf, uint8_t addr, int len)
+void E2Write(const uint8_t* buf, uint8_t addr, int len)
 {
-    while (len > 0)
-    {
+    while(len > 0) {
         do { //用寻址操作查询当前是否可进行读写
             I2CStart();
-            if (I2CWrite(0x50<<1)) //寻址器件，应答则跳出循环，否则继续查询
-            {
+            if(I2CWrite(0x50 << 1)) { //寻址器件，应答则跳出循环，否则继续查询
                 break;
             }
             I2CStop();
         } while(1);
         //按页写模式连续写入字节
         I2CWrite(addr);        //写入起始地址
-        while (len > 0)
-        {
+        while(len > 0) {
             I2CWrite(*buf++);  //写入一个字节数据
             len--;             //待写入长度计数递减
             addr++;            //E2地址递增
-            if ((addr%8) == 0) //检查地址是否到达页边界，24C02每页8字节，
-            {                  //所以检测低3位是否为零即可
+            if((addr % 8) == 0) { //检查地址是否到达页边界，24C02每页8字节，
+                //所以检测低3位是否为零即可
                 break;         //到达页边界时，跳出循环，结束本次写操作
             }
         }
         I2CStop();
     }
 }
+/***********************************THE END************************************/

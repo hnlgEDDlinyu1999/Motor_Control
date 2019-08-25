@@ -12,3 +12,4 @@ uint8_t I2CReadACK(void);
 uint8_t I2CWrite(uint8_t dat);
 
 #endif /*_I2C_H*/
+/***********************************THE END************************************/

@@ -22,9 +22,6 @@ void DISPLAYTIM_Config()
     DISPLAYTIM_APBxClockCmd(DISPLAYTIM_Clock, ENABLE);
 }
 
-
-
-
 void DISPLAYTIM_NVIC_Config()
 {
     NVIC_InitTypeDef NVIC_InitStruct;

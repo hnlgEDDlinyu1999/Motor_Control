@@ -9,3 +9,4 @@ void E2Read(uint8_t *buf, uint8_t addr, int len);
 void E2Write(const uint8_t *buf, uint8_t addr, int len);
 
 #endif /*_EEPROM_H*/
+/***********************************THE END************************************/

@@ -196,16 +196,13 @@ void BASIC_TIM_IRQHandler(void)
 		}
 		/*进行PID调整*/
 		Duty += Pid_Cal();     //Pid计算都用这一个函数
-		
-		if (Duty>100)
-		{
-			Duty = 100;
+		if(mode){	
+			if (Duty>65)Duty = 65;
+			if (Duty<0)Duty = 0;			
+	    }else{
+			if (Duty>100)Duty = 100;
+			if (Duty<0)Duty = 0;		
 		}
-        else if (Duty<0)
-		{
-			Duty = 0;
-		}			
-		
 		PWM_SetDuty(Duty);	
 		
 	}

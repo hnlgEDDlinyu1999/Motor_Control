@@ -1121,7 +1121,8 @@ void LCD_ClearLine(uint16_t Line)
 }
 /*********************end of file*************************/
 
-/*以下是自己在显示屏厂家源码基础上添加的内容*/
+
+/* ** 以下是自己在显示屏厂家源码基础上添加的内容** */
 
 /**
 * @brief 显示界面准备
@@ -1219,7 +1220,6 @@ void my_putchar(uint16_t* x, uint16_t* y, const char dischar)
             *y = 0;
         }
     }
-
 }
 /**
 * @brief 显示字符串的函数

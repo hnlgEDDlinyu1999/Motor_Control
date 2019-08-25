@@ -18,7 +18,13 @@
 
 uint8_t key_int_flag = 0;
 uint8_t mode_change_flag = 0;
-
+uint8_t status_index = 0;  ///<调参时与正常运行时的索引
+uint8_t s;                 //<用来记录键值
+/**
+* @brief 按键接口初始化，其实就是将八个口，四个一组，设成高低两种电平状态
+* @param None
+* @return None
+*/
 void KEYPAD4x4_Init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStruct;
@@ -32,7 +38,11 @@ void KEYPAD4x4_Init(void)
     GPIO_Init(KEYPAD4x4PORT, &GPIO_InitStruct);
 
 }
-
+/**
+* @brief 按键接口初始化反转，其实就是在初始化状态的基础上，交换两组接口的状态
+* @param None
+* @return None
+*/
 void KEYPAD4x4_Init_Toggle(void)  //接口初始化2（用于IO工作方式反转）
 {
     GPIO_InitTypeDef  GPIO_InitStruct;
@@ -44,7 +54,6 @@ void KEYPAD4x4_Init_Toggle(void)  //接口初始化2（用于IO工作方式反转）
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(KEYPAD4x4PORT, &GPIO_InitStruct);
-
 }
 
 /**
@@ -215,7 +224,7 @@ void Key_Init(void)
     KEYPAD4x4_INT_INIT(); //按键中断初始化
 }
 /**
-* @brief 按键按下时的响应函数
+* @brief 按键按下时的响应函数,(按键真的好麻烦啊！以后一定要用按键扫描芯片^-^)
 * @detail 按键按下时，该函数会判断按键的类型，并做出具体的反应
 * @param None
 * @return None
@@ -236,12 +245,11 @@ void Key_Handle(void)
                     ParamBuff_Update();//按下确定键，先更新到pidbuff
                     Param_Update();
                     
-					Data_BackUp();
-					
-					
-					Data_Fetch();
-					Param_Update();
-					Param_Refresh();
+				   Data_BackUp();
+				
+				   Data_Fetch();
+				   Param_Update();
+				   Param_Refresh();
                     if(!mode) {
                         Motor_Start();
                     }
@@ -271,6 +279,18 @@ void Key_Handle(void)
                 } else {
                     break;
                 }
+			case 12:
+				mode = 0;
+				Data_Fetch();
+				Param_Update();
+			    Param_Refresh();
+			    break;
+			case 16:
+				mode = 1;
+				Data_Fetch();
+				Param_Update();
+			    Param_Refresh();
+			    break;
             default:
                 switch(status_index) { //index确定之后才让进入改参
                 case 0:

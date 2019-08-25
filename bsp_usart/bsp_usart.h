@@ -24,6 +24,8 @@
 #define DEBUG_USART_IRQ              USART1_IRQn
 #define DEBUG_USART_IRQHandler       USART1_IRQHandler
 
+extern char recv_flag, recv_buff[10];      ///<接收到上位机命令的标志
+
 void Usart_SendByte(USART_TypeDef * pUSARTx,uint8_t ch);
 void UsartSendString(USART_TypeDef *pUSARTx,char *str);
 void USART_Config (void);
